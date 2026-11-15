@@ -28,3 +28,20 @@ Son güncelleme: 2026-11-16
 - **GPU**: bu makinede CUDA yok (Intel Arc 130V iGPU, torch `2.15.0+cpu`).
   Gerçek eğitim için kiralık 4090 gerekiyor (~7 $). Kullanıcı tarafında
   hesap/ödeme gereken tek adım.
+
+## İlerlemeyi izleme
+
+`docs/status.html` gerçek durumdan üretilen bir panodur (uydurma sayı yok).
+
+```bash
+uv run python scripts/status_report.py          # bir kez üret
+uv run python scripts/status_report.py --open   # üret ve tarayıcıda aç
+```
+
+Sayfa 30 saniyede bir kendini yeniler; yeni sayıları görmek için betiği tekrar
+çalıştırmak yeterli. Sürekli izlemek için:
+
+```powershell
+while ($true) { uv run python scripts/status_report.py; Start-Sleep 30 }
+```
+

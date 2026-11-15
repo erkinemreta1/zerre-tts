@@ -1,4 +1,4 @@
-.PHONY: help install test lint audit demo build clean
+.PHONY: help install test lint audit demo build clean status
 
 help:
 	@echo "install  - editable install with dev extras"
@@ -6,6 +6,7 @@ help:
 	@echo "lint     - ruff check"
 	@echo "audit    - verify the phoneme inventory against eSpeak NG"
 	@echo "demo     - phonemize one Turkish sentence"
+	@echo "status   - rebuild docs/status.html from the real state"
 	@echo "build    - wheel + sdist"
 
 install:
@@ -23,6 +24,9 @@ audit:
 
 demo:
 	uv run python -c "from zerre.text import phonemize; print(' '.join(phonemize('Merhaba dünya!').symbols))"
+
+status:
+	uv run python scripts/status_report.py
 
 build:
 	uv build

@@ -28,3 +28,6 @@ eval/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Generated dashboard (run scripts/status_report.py)
+docs/status.html
