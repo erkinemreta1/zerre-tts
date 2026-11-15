@@ -1,36 +1,30 @@
 # Durum
 
-Son güncelleme: 2026-11-15
+Son güncelleme: 2026-11-16
 
 ## Bitti
 
 | Adım | Kanıt |
 |---|---|
 | Repo + CI (3 OS) | https://github.com/erkinemreta1/zerre-tts, Actions yeşil |
-| Türkçe frontend | `lang/tr.py`, 62 token / 45 fonem, 40 cümlelik test seti geçiyor |
+| Türkçe frontend | `lang/tr.py`, 62 token / 45 fonem, 34 test geçiyor |
 | Taşınabilirlik | `filelock`, `ZERRE_ESPEAK` keşfi, yolsuz kaynak ağacı testi |
 | Veri seti incelemesi | 48 kHz doğrulandı (kartlarda yazmıyordu) |
 | Tam korpus | 8.650 klip, 8.0 sa MK + 8.01 sa NK = 16.01 sa |
-| Akustik hazırlık | 8.491 kabul / 159 red (val+test satırları) → `data/tr/features_full` |
-| Hizalama | 100 kliplik pilot: 66 kabul, timing probe 0.606 (upstream 0.58-0.64) |
+| Akustik hazırlık | YIN + otokorelasyon ötümlülük, `feature_version: 3` |
+| Hizalama | 24 kliplik probe: 0.843 / 0.884 (upstream 0.58-0.66) |
 | ONNX yolu | 20.4 MB export, PyTorch ile korelasyon 0.9818 (gürültü tabanı 0.9820) |
-
-## Şu an çalışıyor
-
-Tam korpus annotasyonu: 8.650 klip, CPU, tahmini 3-4 saat.
-Çıktı: `data/tr/annotations/{train,validation,test}.jsonl`.
+| Web demosu | `web/public/` + 25.344 kelimelik sözlük (%99.98), Pages workflow |
 
 ## Sıradaki
 
-1. Annotasyon kabul oranını ölç; %20'nin üzerindeyse QC eşiklerini gözden geçir
-   (bkz. `docs/alignment.md`).
-2. CPU'da 5-10 step'lik eğitim smoke'u: loss düşüyor mu, checkpoint yazılıyor mu.
-3. Kiralık 4090'da gerçek koşu (`docs/train.md`).
-4. Export + GitHub Pages demosu.
+1. Annotasyonun bitmesi (`data/tr/annotations/{train,validation,test}.jsonl`).
+2. `scripts/package_training.py` ile bütünlük kontrolü + HF'ye yükleme.
+3. Kiralık 4090'da eğitim (`docs/train.md`).
+4. Export → `web/public/model.onnx` → Pages demosu canlı.
 
 ## Engeller
 
-- **GPU**: bu makinede CUDA yok (Intel Arc 130V iGPU). Gerçek eğitim için kiralık
-  4090 gerekiyor (~7 $). Bu, kullanıcı tarafında hesap/ödeme gerektiren tek adım.
-- Whiper QC tam korpusta henüz koşmadı; pilot 20 klipte medyan WER 0.0, p90 0.182
-  olduğu için v1'de kaynak metinler kullanılıyor.
+- **GPU**: bu makinede CUDA yok (Intel Arc 130V iGPU, torch `2.15.0+cpu`).
+  Gerçek eğitim için kiralık 4090 gerekiyor (~7 $). Kullanıcı tarafında
+  hesap/ödeme gereken tek adım.

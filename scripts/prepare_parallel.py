@@ -72,7 +72,7 @@ def run_parts(parts, work_dir, split, workers):
 def merge(work_dir, output, split, parts):
     train_dir = output / split
     train_dir.mkdir(parents=True, exist_ok=True)
-    merged, rejected, accepted, dropped = [], [], 0, 0
+    merged, rejected, dropped = [], [], 0
     for part in parts:
         name = part.stem
         part_dir = work_dir / name
@@ -115,10 +115,10 @@ def merge(work_dir, output, split, parts):
     (output / f"{split}.preparation.json").write_text(json.dumps({
         "identity": {"merged_parts": [part.stem for part in parts], "features": features_json},
         "complete": True,
-        "accepted": accepted,
+        "accepted": len(merged),
         "rejected": dropped,
     }), encoding="utf-8")
-    return accepted, dropped
+    return len(merged), dropped
 
 
 def main(argv=None):
