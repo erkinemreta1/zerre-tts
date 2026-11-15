@@ -80,6 +80,12 @@ class Language:
             return (phone,)
         if phone in self.fallback:
             return self.fallback[phone]
+        # Some eSpeak voices write a long vowel as a doubled glyph (ɯɯ) instead
+        # of the length mark (ɯː); normalise that before giving up.
+        if len(phone) == 2 and phone[0] == phone[1]:
+            long_form = phone[0] + "ː"
+            if long_form in self.phone_set:
+                return (long_form,)
         stripped = "".join(c for c in unicodedata.normalize("NFD", phone) if not unicodedata.combining(c))
         for candidate in (stripped, stripped.replace("ː", ""), stripped + "ː"):
             if candidate != phone and candidate in self.phone_set:

@@ -27,13 +27,17 @@ CONSONANTS = (
 # [ɛ] and [æ] are the contextual realisations of e, mapped onto /e/ by FALLBACK.
 VOWELS = (
     "a", "e", "i", "o", "u", "y", "ø", "œ", "ɯ",
-    "aː", "eː", "iː", "oː", "uː", "yː", "øː", "œː",
+    "aː", "eː", "iː", "oː", "uː", "yː", "øː", "œː", "ɯː",
 )
 
 # eSpeak phones from loanwords and foreign names pushed onto the closest Turkish
 # phone. Anything still unknown becomes <unk> and is reported by the audit.
 FALLBACK = {
     "r": ("ɾ",), "ɹ": ("ɾ",), "ʀ": ("ɾ",),
+    # eSpeak NG 1.52 spells the velar stop both ways depending on the word.
+    "ɡ": ("g",),
+    # Long ı comes out as a doubled glyph rather than the length mark.
+    "ɯɯ": ("ɯː",),
     "θ": ("t",), "ð": ("d",), "ɣ": ("g",), "x": ("h",), "q": ("k",),
     "ʎ": ("l", "j"), "ɬ": ("l",), "ts": ("t", "s"), "dz": ("d", "z"),
     "β": ("v",), "ʋ": ("v",), "ɸ": ("f",), "ʂ": ("ʃ",), "ʐ": ("ʒ",),
@@ -78,6 +82,6 @@ LANGUAGE = Language(
     normalize=normalize,
     # The annotation recogniser's eSpeak snapshot spells the velar stop with the
     # IPA letter U+0261, while this inventory and eSpeak NG 1.52 use ASCII "g".
-    aligner_fallback={"g": "ɡ"},
+    aligner_fallback={"g": "ɡ", "ɯː": "ɯ"},
     notes="Stress is final-syllable by default; eSpeak marks the exceptions.",
 )
