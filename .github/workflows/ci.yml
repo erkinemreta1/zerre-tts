@@ -58,3 +58,18 @@ jobs:
           uv venv /tmp/check
           uv pip install --python /tmp/check dist/*.whl
           /tmp/check/bin/python -c "import zerre; print(zerre.__version__)"
+
+  onnx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install eSpeak NG
+        run: sudo apt-get update && sudo apt-get install -y espeak-ng
+      - run: uv sync --extra dev --extra export
+      - name: Build an untrained checkpoint and export it
+        run: |
+          uv run python scripts/export_smoke.py --output runs/ci
+          uv run python -m zerre.export --checkpoint runs/ci/inference.pt --output runs/ci/model.onnx
+      - name: Check ONNX against PyTorch
+        run: uv run python scripts/check_onnx.py --checkpoint runs/ci/inference.pt --onnx runs/ci/model.onnx
