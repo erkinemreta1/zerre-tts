@@ -32,17 +32,19 @@ reddediliyordu. Düzeltmeden sonra aynı 100 klipte:
 | Kabul | 51 | **66** |
 | `unknown_phoneme` | 23 | 0 |
 
-## Kalite probu (pilot, 100 klip, MK)
+## Kalite probu (24 klip, MK, düzeltilmiş ötümlülükle)
 
 Sınırlarda ötümlülük dönüşü (İngilizce upstream değerleriyle karşılaştırma):
 
 | Sınır | Türkçe `flip_found` | Upstream F2 | Upstream M2 |
 |---|---:|---:|---:|
-| ünlü → ötsüz ünsüz | 0.606 (642 sınır) | 0.638 | 0.580 |
-| sürtünmeli → ünlü | 0.674 (242 sınır) | 0.663 | 0.659 |
+| ünlü → ötsüz ünsüz | 0.843 (166 sınır) | 0.638 | 0.580 |
+| sürtünmeli → ünlü | 0.884 (69 sınır) | 0.663 | 0.659 |
 
-Yani hizalama İngilizce orijinalle aynı aralıkta. `mean_offset_frames` -0.005,
-`within_1_frame` 0.54.
+Not: ilk denemede ötümlülük çerçeve enerjisinden geliyordu ve probe 0.247 / 0.015
+gibi anlamsız değerler veriyordu; `zerre.prosody` otokorelasyon tabanlı
+ötümlülüğe geçtikten sonra ölçüm anlamlı hale geldi. `mean_abs_frames` 1.81,
+`within_1_frame` 0.56.
 
 ## Kalan retler ve nedenleri
 

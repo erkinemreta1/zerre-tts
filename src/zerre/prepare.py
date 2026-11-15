@@ -23,6 +23,7 @@ from filelock import FileLock, Timeout
 
 from .config import Config
 from .journal import append, atomic_json, file_hash, json_safe, recover
+from .prosody import voicing as frame_voicing
 from .text import language
 
 MIN_FRAMES = 32
@@ -66,12 +67,13 @@ def extract(wave, config):
         f0, voiced = f0[:frames], voiced[:frames]
     else:
         # YIN is two orders of magnitude faster than pYIN and lands within a few
-        # tenths of a hertz on voiced frames, but it returns a value for nearly
-        # every frame, so voicing is decided from frame energy instead.
+        # tenths of a hertz on voiced frames. It always returns a value, so
+        # voicing comes from the autocorrelation peak instead of the energy: a
+        # loud fricative is periodic-free but not silent.
         f0 = librosa.yin(wave, fmin=c.f0_min, fmax=c.f0_max, sr=c.sample_rate,
                          frame_length=c.n_fft, hop_length=c.hop, center=True, pad_mode="constant")[:frames]
-        level = 20 * np.log10(np.maximum(rms, 1e-8))
-        voiced = (level > np.percentile(level, 95) - 40.0) & np.isfinite(f0) & (f0 > 0)
+        voiced, _ = frame_voicing(wave, c.sample_rate, c.hop, c.n_fft, c.f0_min, c.f0_max)
+        voiced = voiced[:frames]
     pitch = np.where(voiced, np.log(np.maximum(np.nan_to_num(f0, nan=200.0), 1)/200.0), 0)
     prosody = np.stack((pitch, voiced.astype(np.float32), np.log(np.maximum(rms, 1e-5))), axis=-1)
     return {"wave": torch.from_numpy(wave), "mel": torch.from_numpy(mel.astype(np.float32)),

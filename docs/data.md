@@ -87,10 +87,20 @@ dizinde birleştirilir. `zerre.annotate` birleşik dizini olduğu gibi okur.
 | `torchaudio.detect_pitch_frequency` | 4.8x | |
 | **`librosa.yin`** | **271x** | sesli çerçevelerde pyin ile medyan 0.2 Hz fark |
 
-YIN her çerçeveye bir değer verdiği için ötümlülük kararı çerçeve enerjisinden
-gelir: tepe seviyesinin 40 dB altındaki çerçeveler ötümsüz sayılır. Bu, sıfırdan
-eğitimde tutarlı olduğu sürece yeterli; `acoustic_config` bu seçimi parmak izine
-dahil eder (`pitch_tracker`), yani eski dosyalarla karışmaz.
+YIN her çerçeveye bir değer verdiği için ötümlülük ayrı hesaplanır:
+`zerre.prosody.voicing` çerçeve başına normalize otokorelasyon tepe noktasını
+(F0 bandına karşılık gelen gecikme aralığında) alır ve eşikler. Enerji kapısı
+(tepe - 40 dB) yalnızca sessizliği eler; enerji tek başına ötümlülük yerine
+geçmez, çünkü ötümsüz sürtünmeliler de yüksektir.
+
+| Ötümlülük yöntemi | `vowel→voiceless` flip | `fricative→vowel` flip |
+|---|---:|---:|
+| Çerçeve enerjisi (ilk deneme) | 0.247 | 0.015 |
+| **Otokorelasyon (seçilen)** | **0.843** | **0.884** |
+
+Bu, hizalama kalite probunu (bkz. `docs/alignment.md`) anlamlı kılar. Seçim
+`acoustic_config` içinde sürümlenir (`feature_version: 3`,
+`voicing: autocorrelation-v1`), yani eski özellik dosyaları reddedilir.
 
 Etkisi: 8650 klibin akustik hazırlığı ~36 saatten **~13 dakikaya** indi
 (200 klip / 18.3 sn ölçümü).

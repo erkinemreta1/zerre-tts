@@ -103,7 +103,8 @@ class Config:
         """Settings that determine stored wave/mel/prosody tensors. Tokens and
         durations are versioned separately by the annotation layer."""
         fields = ("sample_rate", "hop", "n_fft", "n_mels", "f0_min", "f0_max", "pitch_tracker")
-        return {**{key: getattr(self, key) for key in fields}, "feature_version": 2,
+        return {**{key: getattr(self, key) for key in fields}, "feature_version": 3,
+                "voicing": "autocorrelation-v1",
                 "pitch_reference_hz": 200, "log_floor": 1e-5}
 
     @property
