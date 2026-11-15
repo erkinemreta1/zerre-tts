@@ -25,8 +25,11 @@ python -m http.server 8000
 ## Nasıl çalışıyor
 
 - Fonemler `lexicon-tr.json`'dan gelir (eSpeak NG `tr` ile üretilmiş, eğitimle
-  aynı envanter). Sözlükte olmayan kelimeler için `worker.js` içindeki kural
+  aynı envanter). Sözlükte olmayan kelimeler için `phonemize-tr.js` içindeki kural
   tabanlı dönüştürücü devreye girer.
+- Doğruluk: 40 gerçek cümlede tarayıcı fonemlemesi eSpeak çıktısıyla
+  karşılaştırıldı — %82.5 birebir, ortalama token oranı **0.9975**, medyan 1.0
+  (`uv run python scripts/check_web_phonemes.py --sentences 40`).
 - Model ONNX Runtime Web (wasm) ile worker thread'de koşar, cümle cümle sentezler
   ve her cümleyi hazır olduğunda çalar.
 - Ses hiçbir sunucuya gitmez.
