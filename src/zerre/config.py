@@ -19,6 +19,9 @@ class Config:
     n_mels: int = 80
     f0_min: float = 50.0
     f0_max: float = 600.0
+    # Pitch/voicing tracker used by acoustic preparation. "yin" is ~150x faster
+    # than pYIN at the same median F0; voicing comes from frame energy.
+    pitch_tracker: str = "yin"
     # Language pack: token inventory, eSpeak voice and normalisation.
     language: str = ""
     # Voices in the release. Per dataset; inference reads weights/voices.json.
@@ -78,6 +81,8 @@ class Config:
             raise ValueError("layer counts must be positive and the kernel odd")
         if min(self.mel_scale, self.energy_scale) <= 0 or not 0 < self.harmonic_limit < 0.5:
             raise ValueError("invalid normalization scale or harmonic limit")
+        if self.pitch_tracker not in ("yin", "pyin"):
+            raise ValueError(f"pitch_tracker must be 'yin' or 'pyin', not {self.pitch_tracker!r}")
 
     def to_dict(self):
         return asdict(self)
@@ -97,7 +102,7 @@ class Config:
     def acoustic_config(self):
         """Settings that determine stored wave/mel/prosody tensors. Tokens and
         durations are versioned separately by the annotation layer."""
-        fields = ("sample_rate", "hop", "n_fft", "n_mels", "f0_min", "f0_max")
+        fields = ("sample_rate", "hop", "n_fft", "n_mels", "f0_min", "f0_max", "pitch_tracker")
         return {**{key: getattr(self, key) for key in fields}, "feature_version": 2,
                 "pitch_reference_hz": 200, "log_floor": 1e-5}
 

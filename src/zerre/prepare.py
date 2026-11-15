@@ -59,11 +59,20 @@ def extract(wave, config):
     spectrum = librosa.stft(wave, n_fft=c.n_fft, hop_length=c.hop, center=True, pad_mode="constant")[:, :frames]
     filters = librosa.filters.mel(sr=c.sample_rate, n_fft=c.n_fft, n_mels=c.n_mels)
     mel = np.log(np.maximum(filters @ np.abs(spectrum)**2, 1e-5)).T
-    f0, voiced, _ = librosa.pyin(wave, fmin=c.f0_min, fmax=c.f0_max, sr=c.sample_rate,
-                                frame_length=c.n_fft, hop_length=c.hop, center=True, pad_mode="constant")
-    f0, voiced = f0[:frames], voiced[:frames]
-    pitch = np.where(voiced, np.log(np.maximum(np.nan_to_num(f0, nan=200.0), 1)/200.0), 0)
     rms = librosa.feature.rms(y=wave, frame_length=c.n_fft, hop_length=c.hop, center=True, pad_mode="constant")[0, :frames]
+    if c.pitch_tracker == "pyin":
+        f0, voiced, _ = librosa.pyin(wave, fmin=c.f0_min, fmax=c.f0_max, sr=c.sample_rate,
+                                     frame_length=c.n_fft, hop_length=c.hop, center=True, pad_mode="constant")
+        f0, voiced = f0[:frames], voiced[:frames]
+    else:
+        # YIN is two orders of magnitude faster than pYIN and lands within a few
+        # tenths of a hertz on voiced frames, but it returns a value for nearly
+        # every frame, so voicing is decided from frame energy instead.
+        f0 = librosa.yin(wave, fmin=c.f0_min, fmax=c.f0_max, sr=c.sample_rate,
+                         frame_length=c.n_fft, hop_length=c.hop, center=True, pad_mode="constant")[:frames]
+        level = 20 * np.log10(np.maximum(rms, 1e-8))
+        voiced = (level > np.percentile(level, 95) - 40.0) & np.isfinite(f0) & (f0 > 0)
+    pitch = np.where(voiced, np.log(np.maximum(np.nan_to_num(f0, nan=200.0), 1)/200.0), 0)
     prosody = np.stack((pitch, voiced.astype(np.float32), np.log(np.maximum(rms, 1e-5))), axis=-1)
     return {"wave": torch.from_numpy(wave), "mel": torch.from_numpy(mel.astype(np.float32)),
             "prosody": torch.from_numpy(prosody.astype(np.float32))}

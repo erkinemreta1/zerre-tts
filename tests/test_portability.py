@@ -34,6 +34,15 @@ def test_config_rejects_duplicate_speakers():
         Config(speakers=("A", "A"))
 
 
+def test_pitch_tracker_is_validated_and_fingerprinted():
+    with pytest.raises(ValueError):
+        Config(pitch_tracker="loudness")
+    yin = Config(pitch_tracker="yin")
+    pyin = Config(pitch_tracker="pyin")
+    assert yin.acoustic_fingerprint != pyin.acoustic_fingerprint
+    assert yin.pitch_tracker == "yin"
+
+
 def test_source_tree_has_no_user_specific_paths():
     offenders = []
     for path in SRC.rglob("*.py"):

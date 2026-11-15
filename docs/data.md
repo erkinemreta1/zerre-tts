@@ -75,6 +75,26 @@ Parquet 7 dilime bölünür (sesler dönüşümlü dağıtılır), her dilim ayr
 `zerre.prepare` sürecinde işlenir, sonra manifestler ve `.pt` dosyaları tek
 dizinde birleştirilir. `zerre.annotate` birleşik dizini olduğu gibi okur.
 
+## F0 / voicing çıkarımı
+
+`zerre.prepare` varsayılan olarak **YIN** kullanır (`Config.pitch_tracker="yin"`).
+Ölçüm (3 klip, 18 sn ses, bu makinede):
+
+| Yöntem | Hız | Not |
+|---|---:|---|
+| `librosa.pyin` (upstream varsayılanı) | 1.9x realtime | 16 saatlik veri ≈ 8 saat sadece F0 |
+| `librosa.pyin`, 30 eşik | 3.6x | |
+| `torchaudio.detect_pitch_frequency` | 4.8x | |
+| **`librosa.yin`** | **271x** | sesli çerçevelerde pyin ile medyan 0.2 Hz fark |
+
+YIN her çerçeveye bir değer verdiği için ötümlülük kararı çerçeve enerjisinden
+gelir: tepe seviyesinin 40 dB altındaki çerçeveler ötümsüz sayılır. Bu, sıfırdan
+eğitimde tutarlı olduğu sürece yeterli; `acoustic_config` bu seçimi parmak izine
+dahil eder (`pitch_tracker`), yani eski dosyalarla karışmaz.
+
+Etkisi: 8650 klibin akustik hazırlığı ~36 saatten **~13 dakikaya** indi
+(200 klip / 18.3 sn ölçümü).
+
 ## Bilinen sorunlar
 
 - **Metin-ses uyuşmazlığı**: metinler kitaptan geldiği için OCR/transkripsiyon
