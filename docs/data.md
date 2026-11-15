@@ -52,11 +52,28 @@ Reddedilen: süre 7, kırpma 4, metin uzunluğu 1. Çıktı: `data/tr/pilot.parq
 
 ## Tam koşu
 
+`--shards 0 --max-hours 16` (ses başına 8 saat kota):
+
+| | Klip | Saat |
+|---|---:|---:|
+| MK | 4.598 | 8.00 |
+| NK | 4.052 | 8.01 |
+| **Toplam** | **8.650** | **16.01** |
+
+Reddedilen: kırpma 106, süre 47, metin uzunluğu 5, tekrar 5. Çıktı:
+`data/tr/full.parquet` (1.48 GB). Kaynak tarafta toplam ~8.5 GB şerit indirildi
+(23 + 24 şeridin tamamı değil; kota dolunca duruyor).
+
+Akustik özellikler tek süreçte ~36 saat süreceği için paralel hazırlık var:
+
 ```bash
-uv run python scripts/build_parquet.py --shards 0 --max-hours 20 \
-  --output data/tr/full.parquet --report data/reports/full.json
-uv run python -m zerre.prepare --inputs data/tr/full.parquet --split train --output data/tr/features
+uv run python scripts/prepare_parallel.py --inputs data/tr/full.parquet \
+  --output data/tr/features_full --workers 7
 ```
+
+Parquet 7 dilime bölünür (sesler dönüşümlü dağıtılır), her dilim ayrı
+`zerre.prepare` sürecinde işlenir, sonra manifestler ve `.pt` dosyaları tek
+dizinde birleştirilir. `zerre.annotate` birleşik dizini olduğu gibi okur.
 
 ## Bilinen sorunlar
 
