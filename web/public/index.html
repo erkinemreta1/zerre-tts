@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>zerre-tts — Türkçe konuşma sentezi</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --fg: #14161a; --bg: #fbfbfa; --muted: #6b7280; --line: #d8dbe0;
+        --accent: #0b6b5b; --card: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root { --fg: #eceef1; --bg: #101214; --muted: #98a2b3; --line: #2a2f36; --accent: #5ad2b8; --card: #171a1e; }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; padding: 2rem 1rem 4rem; background: var(--bg); color: var(--fg);
+        font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      main { max-width: 44rem; margin: 0 auto; }
+      h1 { font-size: 1.6rem; margin: 0 0 .25rem; letter-spacing: -.01em; }
+      .tagline { color: var(--muted); margin: 0 0 2rem; }
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; }
+      textarea {
+        width: 100%; min-height: 8rem; resize: vertical; padding: .75rem;
+        font: inherit; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 8px;
+      }
+      .row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-top: .75rem; }
+      label { color: var(--muted); font-size: .9rem; }
+      select, input[type="number"] {
+        font: inherit; color: inherit; background: transparent; border: 1px solid var(--line);
+        border-radius: 8px; padding: .35rem .5rem;
+      }
+      button {
+        font: inherit; font-weight: 600; padding: .55rem 1.1rem; border-radius: 8px;
+        border: 1px solid transparent; background: var(--accent); color: var(--bg); cursor: pointer;
+      }
+      button:disabled { opacity: .5; cursor: progress; }
+      #status { color: var(--muted); font-size: .9rem; min-height: 1.4em; margin-left: auto; }
+      #phonemes { color: var(--muted); font-size: .85rem; word-break: break-word; margin-top: .75rem; }
+      .meter { height: 2px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: .75rem; }
+      .meter > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+      footer { color: var(--muted); font-size: .85rem; margin-top: 2rem; }
+      a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>zerre-tts</h1>
+      <p class="tagline">Türkçe, ~5M parametreli, tarayıcıda çalışan konuşma sentezi. Ses cihazından çıkmaz.</p>
+
+      <div class="card">
+        <textarea id="text" spellcheck="false">Merhaba! Bu, tarayıcıda çalışan küçük bir Türkçe konuşma sentezleyicisi. Cümleler sunucuya gitmiyor.</textarea>
+        <div class="row">
+          <label for="voice">Ses</label>
+          <select id="voice"></select>
+          <label for="speed">Hız</label>
+          <input id="speed" type="number" min="0.5" max="2" step="0.05" value="1" style="width: 5rem" />
+          <button id="speak" disabled>Konuş</button>
+          <span id="status">Model yükleniyor…</span>
+        </div>
+        <div class="meter"><div id="progress"></div></div>
+        <div id="phonemes"></div>
+      </div>
+
+      <footer>
+        Model ve kod <a href="https://github.com/erkinemreta1/zerre-tts">GitHub</a>'da.
+        Fonemler eSpeak NG ile üretilen bir sözlükten geliyor.
+      </footer>
+    </main>
+    <script>
+      const worker = new Worker("worker.js");
+      const speak = document.getElementById("speak");
+      const status = document.getElementById("status");
+      const progress = document.getElementById("progress");
+      const voice = document.getElementById("voice");
+      const speed = document.getElementById("speed");
+      const text = document.getElementById("text");
+      const phonemes = document.getElementById("phonemes");
+      let sampleRate = 24000;
+      let context = null;
+      let queue = [];
+      let playing = false;
+      let current = 0;
+
+      function playNext() {
+        if (playing || !queue.length) return;
+        const chunk = queue.shift();
+        playing = true;
+        const buffer = context.createBuffer(1, chunk.length, sampleRate);
+        buffer.copyToChannel(chunk, 0);
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(context.destination);
+        source.onended = () => { playing = false; playNext(); };
+        source.start();
+      }
+
+      worker.onmessage = ({ data }) => {
+        if (data.type === "status") {
+          status.textContent = data.text;
+          progress.style.width = `${Math.round((data.progress || 0) * 100)}%`;
+        } else if (data.type === "ready") {
+          sampleRate = data.sampleRate;
+          data.voices.forEach((name, index) => {
+            const option = document.createElement("option");
+            option.value = String(index);
+            option.textContent = name;
+            voice.append(option);
+          });
+          status.textContent = "Hazır";
+          progress.style.width = "100%";
+          speak.disabled = false;
+        } else if (data.type === "sentence") {
+          queue.push(data.audio);
+          playNext();
+        } else if (data.type === "done") {
+          phonemes.textContent = `son çıktı: ${data.audio.length} örnek, ${Math.round(data.totalTime)} ms ` +
+            `(fonem ${Math.round(data.phonemeTime)} ms, model ${Math.round(data.modelTime)} ms)`;
+          speak.disabled = false;
+          status.textContent = "Hazır";
+        } else if (data.type === "error") {
+          status.textContent = data.message;
+          speak.disabled = false;
+        }
+      };
+
+      speak.addEventListener("click", () => {
+        if (!context) context = new AudioContext();
+        context.resume();
+        queue = [];
+        speak.disabled = true;
+        status.textContent = "Sentezleniyor…";
+        current += 1;
+        worker.postMessage({ type: "speak", id: current, text: text.value, voice: Number(voice.value || 0), speed: Number(speed.value || 1) });
+      });
+
+      worker.postMessage({ type: "load" });
+    </script>
+  </body>
+</html>

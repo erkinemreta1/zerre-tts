@@ -1,0 +1,54 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/public/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch model assets from Hugging Face
+        if: vars.HF_ASSETS != ''
+        run: |
+          curl -fsSL "${{ vars.HF_ASSETS }}/model.onnx" -o web/public/model.onnx
+          curl -fsSL "${{ vars.HF_ASSETS }}/model.json" -o web/public/model.json
+
+      - name: Check that the demo has a model
+        id: assets
+        run: |
+          if [ -f web/public/model.onnx ] && [ -f web/public/model.json ]; then
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::model.onnx missing; set the HF_ASSETS repository variable to the weights URL"
+          fi
+
+      - uses: actions/configure-pages@v5
+        if: steps.assets.outputs.ok == '1'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.assets.outputs.ok == '1'
+        with:
+          path: web/public
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
+        if: steps.assets.outputs.ok == '1'
