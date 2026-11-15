@@ -35,6 +35,9 @@ class Language:
     voiceless: frozenset = frozenset()
     # eSpeak phonemes outside the inventory map to the closest inventory phones.
     fallback: dict = field(default_factory=dict)
+    # Inventory phones the annotation recogniser spells differently (it uses its
+    # own eSpeak snapshot, e.g. IPA "ɡ" instead of "g").
+    aligner_fallback: dict = field(default_factory=dict)
     abbreviations: frozenset = frozenset()
     # Language specific pre-phonemisation cleanup, applied after the generic one.
     normalize: Callable[[str], str] = _identity

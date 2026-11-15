@@ -110,7 +110,8 @@ def run(voices, shards, max_hours, output):
     import pyarrow.parquet as pq
     from huggingface_hub import hf_hub_download
 
-    cap_seconds = max_hours * 3600
+    # Each voice gets an equal share of the budget, so one book cannot eat it all.
+    per_voice_cap = max_hours * 3600 / max(len(voices), 1)
     total_seconds = 0.0
     stats = {"seen": 0, "kept": 0, "rejected": {}, "per_voice": {}}
     seen_texts = set()
@@ -181,15 +182,16 @@ def run(voices, shards, max_hours, output):
                     if len(rows) >= 256:
                         writer.write_table(pa.Table.from_pylist(rows, schema=schema))
                         rows = []
-                    if total_seconds + seconds_voice >= cap_seconds:
+                    if seconds_voice >= per_voice_cap:
                         break
                 if rows:
                     writer.write_table(pa.Table.from_pylist(rows, schema=schema))
+                    rows = []
                 total_seconds += seconds_voice
                 stats["per_voice"][voice] = {"clips": kept_voice, "hours": round(seconds_voice / 3600, 2)}
-                print(f"  {voice}: {kept_voice} clips, {seconds_voice/3600:.2f} h (total {total_seconds/3600:.2f} h)",
-                      flush=True)
-                if total_seconds >= cap_seconds:
+                print(f"  {voice}: {kept_voice} clips, {seconds_voice/3600:.2f} h "
+                      f"(total {total_seconds/3600:.2f} h)", flush=True)
+                if seconds_voice >= per_voice_cap:
                     break
     finally:
         writer.close()

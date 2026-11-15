@@ -34,7 +34,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .text import PHONE_SET, PUNCTUATION, SP, UNK, VOICELESS, VOWEL_SET
+from .text import PHONE_SET, PUNCTUATION, SP, UNK, VOICELESS, VOWEL_SET, language
 
 ALIGNER_MODEL = "facebook/wav2vec2-lv-60-espeak-cv-ft"
 ALIGNER_RATE = 16000
@@ -42,9 +42,14 @@ ALIGNER_STRIDE = 320          # samples at 16 kHz: 20 ms
 ALIGNER_CENTER = 200          # a frame's centre: 12.5 ms after its start
 ALIGNMENT_VERSION = 2
 PAUSING = (",", ".", "?", "!", ";", ":", "—", "…")
-# Every inventory phone is a label of the recogniser (checked when it loads);
-# only the unknown-phone token needs a stand-in.
-ALIGNER_LABEL_FALLBACK = {UNK: "<unk>"}
+
+
+def label_fallback():
+    """Inventory phone -> recogniser label, for phones the recogniser spells
+    differently, plus a stand-in for the unknown-phone token. A language pack
+    may map a phone onto the recogniser's nearest label; nothing else is
+    allowed to go missing (checked when the recogniser loads)."""
+    return {**language().aligner_fallback, UNK: "<unk>"}
 
 
 @dataclass(frozen=True)
@@ -267,12 +272,13 @@ class PhoneRecognizer:
         self.blank = int(self.model.config.pad_token_id)
         self.name = name
         self.revision = vocabulary.parent.name   # snapshot directory = commit hash
-        missing = [p for p in sorted(PHONE_SET) if p not in self.vocabulary and p not in ALIGNER_LABEL_FALLBACK]
+        missing = [p for p in sorted(PHONE_SET) if p not in self.vocabulary and p not in label_fallback()]
         if missing:
             raise ValueError(f"recogniser has no label for inventory phones {missing}")
 
     def label(self, symbol):
-        symbol = symbol if symbol in self.vocabulary else ALIGNER_LABEL_FALLBACK[symbol]
+        fallback = label_fallback()
+        symbol = symbol if symbol in self.vocabulary else fallback[symbol]
         return int(self.vocabulary[symbol])
 
     def log_probs(self, wave, sample_rate):

@@ -76,5 +76,8 @@ LANGUAGE = Language(
     fallback=FALLBACK,
     abbreviations=ABBREVIATIONS,
     normalize=normalize,
+    # The annotation recogniser's eSpeak snapshot spells the velar stop with the
+    # IPA letter U+0261, while this inventory and eSpeak NG 1.52 use ASCII "g".
+    aligner_fallback={"g": "ɡ"},
     notes="Stress is final-syllable by default; eSpeak marks the exceptions.",
 )
