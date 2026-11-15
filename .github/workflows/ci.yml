@@ -1,0 +1,60 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install eSpeak NG (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y espeak-ng
+
+      - name: Install eSpeak NG (macOS)
+        if: runner.os == 'macOS'
+        run: brew install espeak-ng
+
+      - name: Install eSpeak NG (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install espeak --no-progress -y
+          if (Test-Path 'C:\Program Files\eSpeak NG\espeak-ng.exe') {
+            "ZERRE_ESPEAK=C:\Program Files\eSpeak NG\espeak-ng.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+        continue-on-error: true
+
+      - name: Install package
+        run: uv sync --extra dev --extra prepare
+
+      - name: Lint
+        run: uv run ruff check src tests scripts
+
+      - name: Test
+        run: uv run pytest -q
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv build
+      - name: Import wheel in a clean environment
+        run: |
+          uv venv /tmp/check
+          uv pip install --python /tmp/check dist/*.whl
+          /tmp/check/bin/python -c "import zerre; print(zerre.__version__)"

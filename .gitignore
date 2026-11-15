@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Project data: never in git, use Hugging Face for binaries
+data/
+weights/
+runs/
+eval/
+*.wav
+*.onnx
+*.pt
+*.parquet
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
