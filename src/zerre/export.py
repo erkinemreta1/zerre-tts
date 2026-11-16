@@ -195,9 +195,9 @@ class Exportable(nn.Module):
         voiced = (voicing > 0).to(prosody.dtype)
         mean = (prosody[..., 0] * voiced).sum(1, keepdim=True) / voiced.sum(1, keepdim=True).clamp_min(1)
         pitch = mean + (prosody[..., 0] - mean) * pitch_range
-        # Same guard as TinyVoca.synthesize: a single-syllable octave spike reads
-        # as a shout, so the contour stays within six semitones of the mean.
-        pitch = pitch.clamp(mean - 0.35, mean + 0.35)
+        # Same contour shaping as TinyVoca.synthesize (jitter smoothing + soft
+        # clamp), so the browser and the Python path cannot drift apart.
+        pitch = m.shape_pitch(pitch, voicing)
         condition = torch.stack((pitch.clamp(-2.0, 1.5), voiced, prosody[..., 2].clamp(-4.5, 3.0)), dim=-1)
         acoustic = m.acoustic_stack(prosody_hidden + m.prosody_projection(condition), frame_mask)
         f0 = (c.pitch_reference_hz * torch.exp(pitch + pitch_shift)).clamp(c.f0_min, c.f0_max)

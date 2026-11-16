@@ -349,6 +349,29 @@ class TinyVoca(nn.Module):
         return ((2 * slow + fast) / 5 ** 0.5 * semitones * math.log(2) / 12).to(device)
 
     @torch.inference_mode()
+    def shape_pitch(self, pitch, voiced, limit=0.35):
+        """Steady the predicted contour for synthesis.
+
+        Two artefacts: frame-to-frame jitter reads as buzz, and a one-syllable
+        octave jump reads as a shout. A masked 3-tap average removes the jitter
+        (unvoiced frames never bleed into voiced ones) and a tanh soft clamp
+        keeps the contour within ``limit`` of its own mean without the hard
+        corner a plain clamp leaves.
+        """
+        import torch.nn.functional as F
+
+        mask = (voiced > 0).to(pitch.dtype)
+        weighted = pitch * mask
+        kernel = torch.tensor([0.25, 0.5, 0.25], device=pitch.device, dtype=pitch.dtype).view(1, 1, 3)
+        numerator = F.conv1d(F.pad(weighted[:, None], (1, 1), mode="replicate"), kernel)
+        denominator = F.conv1d(F.pad(mask[:, None], (1, 1), mode="replicate"), kernel).clamp_min(1e-6)
+        smoothed = (numerator / denominator)[:, 0]
+        steady = torch.where(mask > 0, smoothed, pitch)
+        total = (steady * mask).sum(dim=1)
+        count = mask.sum(dim=1).clamp_min(1.0)
+        centre = total / count
+        return centre[:, None] + limit * torch.tanh((steady - centre[:, None]) / limit)
+
     def synthesize(self, tokens, stress, lengths, speakers, speed=1.0, pitch_shift=0.0, seed=0, pitch_range=1.0, pitch_jitter=0.0,
                    voiced_vowels=True):
         """Free-running synthesis: predicted durations, pitch, voicing and energy."""
@@ -369,15 +392,7 @@ class TinyVoca(nn.Module):
             prosody = torch.cat((prosody[..., :1], torch.where(vowel, prosody[..., 1].clamp_min(2.0), prosody[..., 1])[..., None],
                                  prosody[..., 2:]), dim=-1)
         prosody = self.widen_pitch(prosody, frame_mask, pitch_range)
-        # The pitch predictor occasionally spikes a single syllable an octave up
-        # (a shout on a 120 Hz voice). Keep the contour inside six semitones of
-        # the utterance's own mean; questions and emphasis move far less. A
-        # masked mean, not a median: it has to survive the ONNX export.
-        voiced = (prosody[..., 1] > 0).float()
-        total = (prosody[..., 0] * voiced).sum(dim=1)
-        count = voiced.sum(dim=1).clamp_min(1.0)
-        centre = total / count
-        pitch = prosody[..., 0].clamp(centre[:, None] - 0.35, centre[:, None] + 0.35)
+        pitch = self.shape_pitch(prosody[..., 0], prosody[..., 1])
         prosody = torch.cat((pitch[..., None], prosody[..., 1:]), dim=-1)
         acoustic = self.decode(prosody_hidden, self.hard_prosody(prosody), frame_mask)
         # One noise stream per row, drawn at the row's own length, so batching or

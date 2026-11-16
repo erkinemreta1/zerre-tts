@@ -70,7 +70,7 @@
       </footer>
     </main>
     <script>
-      const worker = new Worker("worker.js?v=6");
+      const worker = new Worker("worker.js?v=8");
       const speak = document.getElementById("speak");
       const status = document.getElementById("status");
       const progress = document.getElementById("progress");
@@ -91,6 +91,20 @@
 
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       if (!AudioContextClass) fail("Tarayıcı Web Audio desteklemiyor.");
+
+      // onnxruntime-web ships a SIMD build; Safari before 16.4 has no SIMD, and
+      // the runtime then fails with a terse TypeError. Say so plainly instead.
+      const simd = (() => {
+        try {
+          return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1,
+            123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11]));
+        } catch (error) {
+          return false;
+        }
+      })();
+      if (!simd) {
+        fail("Bu tarayıcı WebAssembly SIMD desteklemiyor. Safari 16.4+ veya güncel Chrome deneyin.");
+      }
       let sampleRate = 24000;
       let context = null;
       let chain = null;

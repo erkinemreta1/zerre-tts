@@ -3,19 +3,29 @@
 // phonemize-tr.js. Messages in: {type:"load"}, {type:"speak", id, text, voice, speed}.
 // Messages out: status, ready, sentence, done, error.
 
-const ORT = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/";
+const CDNS = [
+  "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/",
+  "https://unpkg.com/onnxruntime-web@1.20.1/dist/",
+];
+let ORT = null;
 let session, config, symbols, lexicon;
-const VERSION = "6";
+const VERSION = "8";
 
 const status = (text, progress) => postMessage({ type: "status", text, progress });
 
-try {
-  importScripts(ORT + "ort.wasm.min.js", "phonemize-tr.js");
-} catch (error) {
-  postMessage({ type: "error", message: `Model çalışma zamanı yüklenemedi: ${error && error.message ? error.message : error}`, plain: true });
+for (const base of CDNS) {
+  try {
+    importScripts(base + "ort.wasm.min.js", "phonemize-tr.js");
+    if (typeof ort !== "undefined" && typeof globalThis.zerre !== "undefined") {
+      ORT = base;
+      break;
+    }
+  } catch (error) {
+    // try the next mirror
+  }
 }
-if (typeof ort === "undefined" || typeof globalThis.zerre === "undefined") {
-  postMessage({ type: "error", message: "Model çalışma zamanı yüklenemedi (ağ veya tarayıcı engeli).", plain: true });
+if (!ORT) {
+  postMessage({ type: "error", message: "Model çalışma zamanı yüklenemedi (ağ, CDN veya tarayıcı engeli).", plain: true });
 }
 
 async function fetchBytes(url, label) {
