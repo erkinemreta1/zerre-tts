@@ -83,5 +83,15 @@ LANGUAGE = Language(
     # The annotation recogniser's eSpeak snapshot spells the velar stop with the
     # IPA letter U+0261, while this inventory and eSpeak NG 1.52 use ASCII "g".
     aligner_fallback={"g": "ɡ", "ɯː": "ɯ"},
+    novel_sentences=(
+        "Bugün hava çok güzel, sahilde yürüyüş yapalım mı?",
+        "Kütüphaneden aldığım kitabı iki günde bitirdim.",
+        "Tren saat onda kalkıyor, bu yüzden erken çıkmamız gerekiyor.",
+        "Çocuklar bahçede top oynarken yağmur başladı.",
+        "Bu tarifi annemden öğrendim, çok az malzemeyle yapılıyor.",
+        "Toplantı yarın sabah dokuzda başlayacak.",
+        "Yeni açılan kafede kahve gerçekten çok lezzetliydi.",
+        "Telefonumu şarj etmeyi unuttuğum için yolda kaldım.",
+    ),
     notes="Stress is final-syllable by default; eSpeak marks the exceptions.",
 )

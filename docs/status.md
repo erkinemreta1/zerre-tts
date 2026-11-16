@@ -1,25 +1,32 @@
 # Durum
 
-Son güncelleme: 2026-11-16 · **eğitim Modal'da sürüyor (`tr-v1`)**
+Son güncelleme: 2026-11-16 · **eğitim bitti, model hazır**
 
 | | |
 |---|---|
-| Veri | 6.347 klip · 11.93 sa (Modal volume, T4'te hizalandı: 568 sn) |
-| Eğitim | 65.000 step hedefi, 6 saatlik dilim, L4 |
-| Ölçülen | GAN sonrası 2.12 step/s · GPU %77 · 186 ses-sn/sn |
-| Maliyet | veri işi ~0.10 $ + probe'lar ~0.10 $ + eğitim ~4.8 $ |
+| Veri | 6.347 klip · 11.93 sa (GPU'da hizalandı, 568 sn) |
+| Eğitim | **65.000 step · loss 9.86 · GPU ort. %90 · ~7 $** |
+| WER (test, aynı domain) | **%1.3** (kayıt: %0.0) |
+| WER (yeni cümleler) | **%12.7** |
+| Süre oranı | 0.95 · mel DTW 0.69 |
+| Boyut | `inference.pt` 17.4 MB · `model.onnx` 20.4 MB |
 
-Örnek almak için (GPU sırası beklemeden, CPU'da):
+Örnek dinlemek için (CPU'da, GPU sırası beklemez):
 
 ```bash
 uv run python scripts/taste.py                 # iki ses, son checkpoint
 uv run python scripts/taste.py --voice NK --text "İstediğin cümle."
 ```
 
-Dosya adı checkpoint'in gerçek adımını taşır: `samples/taste-step07000-mk.wav`.
+Dosya adı checkpoint adımını ve cümle etiketini taşır:
+`samples/taste-step65000-mk-bugun-hava-cok.wav`.
 
-Kaldığı yer: veri ve hizalama tamam, eğitim başladı. Devam/izleme komutları
-`docs/modal.md`'de.
+Durumu izlemek:
+
+```bash
+uv run python scripts/train_progress.py --fetch   # step, loss, kalan süre
+uv run python scripts/status_report.py            # docs/status.html panosu
+```
 
 ## Bitti
 

@@ -28,8 +28,9 @@ import torch
 from .data import AnnotatedDataset
 from .infer import load_model, speak
 from .losses import SpectralLoss
+from .text import language
 
-NOVEL_SENTENCES = (
+ENGLISH_NOVEL = (
     "The quick brown fox jumps over the lazy dog near the quiet river.",
     "Please remember to call your grandmother before the weekend starts.",
     "How many people are coming to the conference in September?",
@@ -39,6 +40,11 @@ NOVEL_SENTENCES = (
     "Could you send me the report by Friday afternoon, please?",
     "She sells seashells by the seashore, and the shells she sells are surely seashells.",
 )
+
+
+def novel_sentences():
+    """Sentences in no split, from the active language pack when it has them."""
+    return language().novel_sentences or ENGLISH_NOVEL
 SEMITONES = 12 / np.log(2)
 
 
@@ -87,7 +93,7 @@ def main():
     parser.add_argument("--splits", nargs="+", default=["train", "validation", "test"])
     parser.add_argument("--train-subset", type=int, help="Restrict 'train' examples to the first N balanced rows (the --subset used in training)")
     parser.add_argument("--per-voice", type=int, default=4)
-    parser.add_argument("--novel", type=int, default=len(NOVEL_SENTENCES))
+    parser.add_argument("--novel", type=int, default=len(novel_sentences()))
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--asr-model", default="small.en")
     parser.add_argument("--no-asr", action="store_true")
@@ -119,7 +125,7 @@ def main():
         for voice in c.speakers:
             chosen = spread([i for i in candidates if dataset.rows[i]["speaker"] == voice], dataset.lengths, args.per_voice)
             jobs += [{"group": split, "voice": voice, "index": i, "id": dataset.rows[i]["id"], "text": dataset.rows[i]["text"]} for i in chosen]
-    for number, text in enumerate(NOVEL_SENTENCES[:args.novel]):
+    for number, text in enumerate(novel_sentences()[:args.novel]):
         if hashlib.sha256(text.strip().encode()).hexdigest() in known_texts:
             raise ValueError("a 'novel' sentence is part of the dataset")
         jobs += [{"group": "novel", "voice": voice, "index": None, "id": f"novel{number:02d}_{voice}", "text": text} for voice in c.speakers]
@@ -177,7 +183,7 @@ def main():
             audio, rate = sf.read(path, dtype="float32")
             factor = int(np.gcd(rate, 16000))      # the ASR model expects 16 kHz samples
             audio = resample_poly(audio, 16000 // factor, rate // factor).astype(np.float32)
-            segments, _ = asr.transcribe(audio, language="en", beam_size=5, condition_on_previous_text=False, temperature=0.0)
+            segments, _ = asr.transcribe(audio, language=language().code, beam_size=5, condition_on_previous_text=False, temperature=0.0)
             return " ".join(segment.text.strip() for segment in segments).strip()
         for record in samples:
             truth = normalize(record["text"])

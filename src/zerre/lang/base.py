@@ -41,6 +41,8 @@ class Language:
     abbreviations: frozenset = frozenset()
     # Language specific pre-phonemisation cleanup, applied after the generic one.
     normalize: Callable[[str], str] = _identity
+    # Sentences that are in no split, used to measure generalisation.
+    novel_sentences: tuple = ()
     notes: str = ""
 
     @property

@@ -60,6 +60,16 @@ def checkpoint_step_metrics(metrics, step):
     return {}
 
 
+def slug(text, limit=24):
+    """Short, filesystem-safe tag so two different sentences never collide."""
+    import re
+    import unicodedata
+
+    folded = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    words = re.findall(r"[a-z0-9]+", folded.lower())[:3]
+    return "-".join(words)[:limit] or "sample"
+
+
 def synthesize(checkpoint, text, voice, output):
     result = subprocess.run(
         [sys.executable, "-m", "zerre.infer", "--checkpoint", str(checkpoint), "--lang", "tr",
@@ -97,8 +107,7 @@ def main(argv=None):
         print(f"training step: {step}  loss {record.get('loss', float('nan')):.2f}")
     prefix = f"taste-step{step:05d}" if step is not None else "taste"
     for voice, text, index in jobs:
-        suffix = "" if index == 0 else f"-{index + 1}"
-        output = args.output / f"{prefix}-{voice.lower()}{suffix}.wav"
+        output = args.output / f"{prefix}-{voice.lower()}-{slug(text)}.wav"
         detail = synthesize(checkpoint, text, voice, output)
         print(f"{output.relative_to(ROOT)}  [{voice}]  {detail}")
     return 0
