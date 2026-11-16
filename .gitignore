@@ -31,3 +31,6 @@ desktop.ini
 
 # Generated dashboard (run scripts/status_report.py)
 docs/status.html
+
+# The demo ships with its weights so GitHub Pages needs no external host
+!web/public/model.onnx
