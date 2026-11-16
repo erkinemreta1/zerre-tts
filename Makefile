@@ -28,6 +28,9 @@ demo:
 status:
 	uv run python scripts/status_report.py
 
+taste:
+	uv run python scripts/taste.py
+
 smoke:
 	uv run python -m zerre.train --train data/tr/annotations/train.jsonl \
 	  --validation data/tr/annotations/validation.jsonl --output runs/smoke \
