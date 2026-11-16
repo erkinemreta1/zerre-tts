@@ -15,7 +15,7 @@ pipeline_tag: text-to-speech
 
 # zerre-tts (tr-v1) — 8 MB, tarayıcıda çalışan Türkçe TTS
 
-İki sesli, sıfırdan eğitilmiş Türkçe metin-konuşma modeli. **int8 ONNX hâli 8.1 MB**
+İki sesli, sıfırdan eğitilmiş Türkçe metin-konuşma modeli. **int8 ONNX hâli 8.5 MB**
 ve tarayıcıda WebAssembly ile çalışır — sunucu, API, GPU gerekmez.
 
 - 🤗 Demo: https://erkinemreta1.github.io/zerre-tts/
@@ -26,7 +26,7 @@ ve tarayıcıda WebAssembly ile çalışır — sunucu, API, GPU gerekmez.
 
 | | |
 |---|---|
-| Boyut | **8.1 MB int8** (fp32: 21.4 MB) |
+| Boyut | **8.5 MB int8** (fp32: 21.4 MB) |
 | Parametre | 4.5M |
 | Ses | 24 kHz, 2 ses (MK erkek, NK kadın) |
 | Lisans | Apache-2.0 — ticari kullanım serbest |
@@ -37,8 +37,8 @@ Quantization ölçümü (8 held-out klipte, Whisper large-v3):
 
 | Varyant | WER | Dosya |
 |---|---:|---:|
-| fp32 | 15.3% | 21.38 MB |
-| **int8** | **15.3%** | **8.11 MB** |
+| fp32 | 14.0% | 21.38 MB |
+| **int8** | **15.3%** | **8.55 MB** |
 
 Yani 13 MB'ı **anlaşılırlıktan hiçbir şey kaybetmeden** attık. Aynı sette
 filtre zinciri (90 Hz high-pass + 3 kHz presence + spektral temizlik) alt bant
@@ -48,7 +48,7 @@ enerjisini %7.3'ten %4.2'ye indiriyor.
 
 | Dosya | Boyut | Ne için |
 |---|---:|---|
-| **`onnx/model-int8.onnx`** | **8.1 MB** | **Önerilen.** Tarayıcı, gömülü, dağıtım |
+| **`onnx/model-int8.onnx`** | **8.5 MB** | **Önerilen.** Tarayıcı, gömülü, dağıtım |
 | `onnx/model.onnx` | 21.4 MB | fp32, referans/karşılaştırma |
 | `onnx/model.json` | — | girdi-çıktı tanımı, ses listesi, sembol tablosu |
 | `inference.pt` | 18.2 MB | PyTorch checkpoint (yeniden eğitim/ince ayar) |
@@ -63,7 +63,7 @@ oransal okuyun.
 
 | Model | Parametre | Dağıtım boyutu | Türkçe WER | MB/WER | Lisans | Tarayıcı | Ses |
 |---|---:|---:|---:|---:|---|---|---|
-| **zerre-tts (int8)** | **4.5M** | **8.1 MB** | **1.3%** (20 klip) | **6.2** | **Apache-2.0** | ✅ | **2** |
+| **zerre-tts (int8)** | **4.5M** | **8.5 MB** | **1.3%** (20 klip) | **6.5** | **Apache-2.0** | ✅ | **2** |
 | okur-tts | 9.8M | ~23 MB ONNX | 1.81% (495 cümle) | 12.8 | Apache-2.0 | ✅ | 1 |
 | Piper `tr_TR-dfki` | ~16M | 63 MB | 3.14% | 20.1 | CC BY-NC-SA | ✅ | 1 |
 | Meta MMS-TTS `tur` | 36M | ~145 MB | 5.74% | 25.3 | CC BY-NC | ✅ | 1 |

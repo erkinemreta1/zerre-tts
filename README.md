@@ -7,7 +7,7 @@ projesinden uyarlanmıştır (Apache-2.0), veri ve dil katmanı yenidir.
 **Demo: https://erkinemreta1.github.io/zerre-tts/** ·
 **Ağırlıklar: https://huggingface.co/erkint/zerre-tts**
 
-- **8.1 MB int8 ONNX** (fp32: 21.4 MB) — quantization WER'i değiştirmiyor (15.3% → 15.3%).
+- **8.5 MB int8 ONNX** (fp32: 21.4 MB) — quantization WER'i değiştirmiyor (15.3% → 15.3%).
 - ~4.5M parametre, 24 kHz, iki ses (`MK` erkek, `NK` kadın).
 - Ölçüm: held-out test setinde **WER %1.3**, yeni cümlelerde **%12.7**
   (Whisper large-v3, Türkçe).
@@ -43,7 +43,7 @@ Türkçe, tarayıcıda çalışan modeller arasında **MB başına kalitede önd
 
 | Model | Parametre | Boyut | Türkçe WER | MB/WER | Lisans | Tarayıcı | Ses |
 |---|---:|---:|---:|---:|---|---|---|
-| **zerre-tts (int8)** | **4.5M** | **8.1 MB** | **1.3%** | **6.2** | **Apache-2.0** | ✅ | **2** |
+| **zerre-tts (int8)** | **4.5M** | **8.5 MB** | **1.3%** | **6.5** | **Apache-2.0** | ✅ | **2** |
 | okur-tts | 9.8M | ~23 MB | 1.81% | 12.8 | Apache-2.0 | ✅ | 1 |
 | Piper `tr_TR-dfki` | ~16M | 63 MB | 3.14% | 20.1 | CC BY-NC-SA | ✅ | 1 |
 | Meta MMS-TTS | 36M | ~145 MB | 5.74% | 25.3 | CC BY-NC | ✅ | 1 |
