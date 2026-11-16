@@ -90,6 +90,28 @@ uv run python scripts/modal_spawn.py --dry-run   # ne göndereceğini göster
 Checkpoint mantığı aynı: `last.pt` varsa `--resume` ile kaldığı yerden başlar,
 yani spawn'ı tekrar çağırmak koşuyu sürdürür.
 
+### Çalışan işi durdurmadan devralma
+
+`modal run` ile koşan işi, kalıcı app'e **iş kaybetmeden** taşımak için: deploy
+edilmiş app'te `--takeover` ile eski app id'sini ver.
+
+```bash
+modal deploy modal_train.py
+
+# önce ne olacağını gör (hiçbir şey durdurmaz, hiçbir şey başlatmaz)
+uv run python scripts/modal_spawn.py --takeover ap-XXXXXXXX --dry-run
+
+# gerçek devralma: eski app'i durdurur, 15 sn bekler, sonra son checkpoint'ten devam eder
+uv run python scripts/modal_spawn.py --takeover ap-XXXXXXXX --hours 6 --name tr-v1
+```
+
+Neden kayıp yok: yeni koşu `last.pt`'den `--resume` yapar. Yalnızca son
+checkpoint'ten sonraki adımlar (en fazla 1000 step ≈ 8 dakika compute ≈ 2 sent)
+tekrar edilir; işlenmiş veri, hizalama ve checkpoint'ler yerinde kalır.
+
+Eski app'i durdurmak zorunlu: iki konteyner aynı run dizinine yazarsa checkpoint
+dosyaları çakışır. `--takeover` bunu sırayla yapar (önce durdur, sonra başlat).
+
 ## Para yakmadan ilerleme (önerilen sıra)
 
 Her adım tek tek ölçülür, gereksiz GPU dakikası harcanmaz:

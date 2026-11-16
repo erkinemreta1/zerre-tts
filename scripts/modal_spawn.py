@@ -20,7 +20,9 @@ Watch it later (no local process needed):
 """
 
 import argparse
+import subprocess
 import sys
+import time
 
 APP_NAME = "zerre-tts-train"
 
@@ -33,6 +35,9 @@ def main(argv=None):
     parser.add_argument("--batch-frames", type=int, default=9000)
     parser.add_argument("--max-batch", type=int, default=32)
     parser.add_argument("--gan-start", type=int, default=4000)
+    parser.add_argument("--takeover", metavar="APP_ID",
+                        help="stop this already-running app first, then resume the same run "
+                             "from its last checkpoint (no work is recomputed)")
     parser.add_argument("--dry-run", action="store_true", help="only print what would be spawned")
     args = parser.parse_args(argv)
 
@@ -45,8 +50,18 @@ def main(argv=None):
         "gan_start": args.gan_start,
     }
     if args.dry_run:
-        print(f"would spawn {APP_NAME}.train with {payload}")
+        prefix = f"after stopping {args.takeover}, " if args.takeover else ""
+        print(f"would {prefix}spawn {APP_NAME}.train with {payload}")
         return 0
+
+    if args.takeover:
+        # Stopping the old app is what makes this safe: two containers must never
+        # write the same run directory. The new run resumes from last.pt, so only
+        # the steps after the most recent save are repeated.
+        print(f"stopping {args.takeover} ...", flush=True)
+        subprocess.run([sys.executable, "-m", "modal", "app", "stop", "-y", args.takeover], check=False)
+        print("waiting for the container to release the volume ...", flush=True)
+        time.sleep(15)
 
     import modal
 
