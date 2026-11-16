@@ -1,6 +1,10 @@
 # Durum
 
-Son güncelleme: 2026-11-16
+Son güncelleme: 2026-11-16 · **duraklatıldı (kullanıcı kararı)**
+
+Kaldığı yer: veri ve hizalama tamam, eğitim başlamadı. CPU denemesi 125. step'te
+durduruldu (`runs/cpu-memo`, checkpoint yok). Devam etmek için gereken tek şey
+GPU; komutlar `docs/train.md`'de.
 
 ## Bitti
 
