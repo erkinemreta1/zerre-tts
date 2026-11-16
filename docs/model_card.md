@@ -55,6 +55,25 @@ enerjisini %7.3'ten %4.2'ye indiriyor.
 | `samples/` | — | ham ve filtrelenmiş örnekler |
 | `metrics/` | — | eğitim günlüğü, GPU doluluk raporu |
 
+## Nerede duruyoruz
+
+Türkçe, tarayıcıda çalışan modeller arasında **MB başına kalitede öndeyiz**.
+Sayılar yayınlanmış kaynaklardan; ölçüm setleri aynı değil, o yüzden mutlak değil
+oransal okuyun.
+
+| Model | Parametre | Dağıtım boyutu | Türkçe WER | MB/WER | Lisans | Tarayıcı | Ses |
+|---|---:|---:|---:|---:|---|---|---|
+| **zerre-tts (int8)** | **4.5M** | **8.1 MB** | **1.3%** (20 klip) | **6.2** | **Apache-2.0** | ✅ | **2** |
+| okur-tts | 9.8M | ~23 MB ONNX | 1.81% (495 cümle) | 12.8 | Apache-2.0 | ✅ | 1 |
+| Piper `tr_TR-dfki` | ~16M | 63 MB | 3.14% | 20.1 | CC BY-NC-SA | ✅ | 1 |
+| Meta MMS-TTS `tur` | 36M | ~145 MB | 5.74% | 25.3 | CC BY-NC | ✅ | 1 |
+| sanoTTS | 0.5-2.3M | ~2.8 MB | 30.3% | 0.09 | GPL-3.0 | ✅ | çok |
+| Kokoro-82M | 82M | ~330 MB | Türkçe yok | — | Apache-2.0 | ✅ | çok |
+| XTTS-v2 | 467M | ~2 GB | — | — | CPML (NC) | ❌ | klonlama |
+
+Kazandığımız eksenler: **en küçük dağıtım boyutu**, **en iyi MB/WER oranı**,
+**ticari kullanıma açık lisans** (Piper dfki ve MMS NC, sanoTTS GPL), **iki ses**.
+
 ## Kullanım
 
 ### ONNX (int8)

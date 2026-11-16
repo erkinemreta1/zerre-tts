@@ -36,6 +36,23 @@ eSpeak NG gerekir (fonem üretimi için):
 
 Kurulu değilse `ZERRE_ESPEAK` ile yolu ver: `ZERRE_ESPEAK=/opt/espeak-ng/bin/espeak-ng`.
 
+## Kıyaslama
+
+Türkçe, tarayıcıda çalışan modeller arasında **MB başına kalitede öndeyiz**.
+Ölçüm setleri aynı olmadığı için mutlak değil, oransal okuyun.
+
+| Model | Parametre | Boyut | Türkçe WER | MB/WER | Lisans | Tarayıcı | Ses |
+|---|---:|---:|---:|---:|---|---|---|
+| **zerre-tts (int8)** | **4.5M** | **8.1 MB** | **1.3%** | **6.2** | **Apache-2.0** | ✅ | **2** |
+| okur-tts | 9.8M | ~23 MB | 1.81% | 12.8 | Apache-2.0 | ✅ | 1 |
+| Piper `tr_TR-dfki` | ~16M | 63 MB | 3.14% | 20.1 | CC BY-NC-SA | ✅ | 1 |
+| Meta MMS-TTS | 36M | ~145 MB | 5.74% | 25.3 | CC BY-NC | ✅ | 1 |
+| sanoTTS | 0.5-2.3M | ~2.8 MB | 30.3% | 0.09 | GPL-3.0 | ✅ | çok |
+| Kokoro-82M | 82M | ~330 MB | Türkçe yok | — | Apache-2.0 | ✅ | çok |
+| XTTS-v2 | 467M | ~2 GB | — | — | CPML (NC) | ❌ | klonlama |
+
+Kazandığımız: **en küçük dağıtım**, **en iyi MB/WER**, **ticari dostu lisans**, **iki ses**.
+
 ## Kullanım
 
 ```bash
