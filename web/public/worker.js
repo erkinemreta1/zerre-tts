@@ -4,12 +4,19 @@
 // Messages out: status, ready, sentence, done, error.
 
 const ORT = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/";
-importScripts(ORT + "ort.wasm.min.js", "phonemize-tr.js");
-
 let session, config, symbols, lexicon;
-const VERSION = "1";
+const VERSION = "4";
 
 const status = (text, progress) => postMessage({ type: "status", text, progress });
+
+try {
+  importScripts(ORT + "ort.wasm.min.js", "phonemize-tr.js");
+} catch (error) {
+  postMessage({ type: "error", message: `Model çalışma zamanı yüklenemedi: ${error && error.message ? error.message : error}`, plain: true });
+}
+if (typeof ort === "undefined" || typeof globalThis.zerre === "undefined") {
+  postMessage({ type: "error", message: "Model çalışma zamanı yüklenemedi (ağ veya tarayıcı engeli).", plain: true });
+}
 
 async function fetchBytes(url, label) {
   const response = await fetch(url);
@@ -112,10 +119,10 @@ onmessage = async ({ data }) => {
   try {
     if (data.type === "load") {
       status("Sözlük yükleniyor");
-      lexicon = await (await fetch("lexicon-tr.json")).json();
+      lexicon = await (await fetch(`lexicon-tr.json?v=${VERSION}`)).json();
       symbols = lexicon.symbols;
       status("Model yükleniyor");
-      config = await (await fetch("model.json")).json();
+      config = await (await fetch(`model.json?v=${VERSION}`)).json();
       const bytes = await download("model.onnx", "Model yükleniyor");
       ort.env.wasm.wasmPaths = ORT;
       ort.env.wasm.numThreads = 1;
