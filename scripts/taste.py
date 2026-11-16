@@ -87,6 +87,8 @@ def main(argv=None):
     parser.add_argument("--voice", action="append", choices=("MK", "NK"))
     parser.add_argument("--text", action="append", help="one sentence per run; voice comes from --voice")
     parser.add_argument("--output", type=Path, default=ROOT / "samples")
+    parser.add_argument("--polish", action="store_true",
+                        help="high-pass + presence shelf + loudness match after synthesis")
     args = parser.parse_args(argv)
 
     checkpoint = fetch(args.volume, args.name)
@@ -109,6 +111,16 @@ def main(argv=None):
     for voice, text, index in jobs:
         output = args.output / f"{prefix}-{voice.lower()}-{slug(text)}.wav"
         detail = synthesize(checkpoint, text, voice, output)
+        if args.polish:
+            import soundfile as sf
+
+            from zerre.postprocess import polish
+
+            wave, rate = sf.read(output, dtype="float32")
+            polished = polish(wave, rate)
+            target = output.with_name(output.stem + "-polished.wav")
+            sf.write(target, polished, rate, subtype="PCM_16")
+            print(f"{target.relative_to(ROOT)}  [{voice}]  polished")
         print(f"{output.relative_to(ROOT)}  [{voice}]  {detail}")
     return 0
 

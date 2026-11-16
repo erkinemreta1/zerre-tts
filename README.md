@@ -4,8 +4,13 @@ Türkçe, küçük ve tarayıcıda çalışan bir metin-konuşma modeli. Sıfır
 hazır ağırlık kullanmaz. Mimarî [tiny-voca](https://github.com/n4ze3m/tiny-voca)
 projesinden uyarlanmıştır (Apache-2.0), veri ve dil katmanı yenidir.
 
-- ~4.5M parametre, 24 kHz, tek checkpoint.
-- Fonem tabanlı: metin → eSpeak NG (`tr`) fonemleri → akustik model → kaynak-filtre vocoder.
+**Demo: https://erkinemreta1.github.io/zerre-tts/**
+
+- ~4.5M parametre, 24 kHz, tek checkpoint (`tr-v1`, 65.000 step).
+- Ölçüm: held-out test setinde **WER %1.3**, yeni cümlelerde **%12.7**
+  (Whisper large-v3, Türkçe).
+- Fonem tabanlı: metin → eSpeak NG (`tr`) fonemleri → akustik model →
+  kaynak-filtre vocoder. Tarayıcıda sözlük + kural tabanlı fonemleme.
 - Dil paketi yapısı: `src/zerre/lang/` altına yeni dil eklenir, çekirdek değişmez.
 
 > Durum: iskelet + Türkçe frontend hazır. Model eğitimi ve ses verisi henüz yok.
