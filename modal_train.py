@@ -60,7 +60,7 @@ app = modal.App(APP_NAME, image=image)
 volume = modal.Volume.from_name(VOLUME, create_if_missing=True)
 
 
-@app.function(gpu="L4", timeout=2 * 3600, volumes={DATA: volume}, cpu=16, memory=32768)
+@app.function(gpu="T4", timeout=2 * 3600, volumes={DATA: volume}, cpu=16, memory=32768)
 def data_stage(parquet: str = f"{DATA}/raw/full.parquet"):
     """Prepare acoustic features and align the corpus on Modal.
 
@@ -75,16 +75,26 @@ def data_stage(parquet: str = f"{DATA}/raw/full.parquet"):
 
     def run(command):
         print(" ".join(command), flush=True)
-        subprocess.run(command, check=True)
+        subprocess.run(command, check=True, cwd="/root/zerre")
 
-    run(["python", "scripts/prepare_parallel.py", "--inputs", parquet,
-         "--output", f"{DATA}/features_full", "--workers", "14"])
-    for split in ("validation", "test"):
-        run(["python", "-m", "zerre.prepare", "--inputs", parquet, "--split", split,
-             "--output", f"{DATA}/features_full"])
-    run(["python", "-m", "zerre.annotate", "--features", f"{DATA}/features_full",
-         "--output", f"{DATA}/annotations", "--dataset-revision", "local",
-         "--device", "cuda", "--splits", "train", "validation", "test"])
+    # Idempotent: a previous attempt may have committed the expensive steps and
+    # died in a later one, so skip whatever is already complete.
+    if Path(f"{DATA}/features_full/train.jsonl").exists():
+        print("features already present, skipping preparation", flush=True)
+    else:
+        run(["python", "scripts/prepare_parallel.py", "--inputs", parquet,
+             "--output", f"{DATA}/features_full", "--workers", "14"])
+        for split in ("validation", "test"):
+            run(["python", "-m", "zerre.prepare", "--inputs", parquet, "--split", split,
+                 "--output", f"{DATA}/features_full"])
+
+    if Path(f"{DATA}/annotations/annotations.json").exists():
+        print("annotations already present, skipping alignment", flush=True)
+    else:
+        run(["python", "-m", "zerre.annotate", "--features", f"{DATA}/features_full",
+             "--output", f"{DATA}/annotations", "--dataset-revision", "local",
+             "--device", "cuda", "--splits", "train", "validation", "test"])
+
     run(["python", "scripts/package_training.py", "--annotations", f"{DATA}/annotations",
          "--features", f"{DATA}/features_full", "--output", f"{DATA}/reports/training-bundle.json"])
     volume.commit()
