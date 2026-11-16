@@ -4,7 +4,8 @@ Türkçe, küçük ve tarayıcıda çalışan bir metin-konuşma modeli. Sıfır
 hazır ağırlık kullanmaz. Mimarî [tiny-voca](https://github.com/n4ze3m/tiny-voca)
 projesinden uyarlanmıştır (Apache-2.0), veri ve dil katmanı yenidir.
 
-**Demo: https://erkinemreta1.github.io/zerre-tts/**
+**Demo: https://erkinemreta1.github.io/zerre-tts/** ·
+**Ağırlıklar: https://huggingface.co/erkint/zerre-tts**
 
 - ~4.5M parametre, 24 kHz, tek checkpoint (`tr-v1`, 65.000 step).
 - Ölçüm: held-out test setinde **WER %1.3**, yeni cümlelerde **%12.7**
