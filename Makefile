@@ -28,6 +28,13 @@ demo:
 status:
 	uv run python scripts/status_report.py
 
+smoke:
+	uv run python -m zerre.train --train data/tr/annotations/train.jsonl \
+	  --validation data/tr/annotations/validation.jsonl --output runs/smoke \
+	  --device cpu --subset 8 --steps 6 --batch-frames 3000 --max-batch 4 \
+	  --gan-start 100 --teacher-hold 2 --teacher-ramp 4 --save-every 3 --log-every 1 \
+	  --max-seconds 900
+
 build:
 	uv build
 

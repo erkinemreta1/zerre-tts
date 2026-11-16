@@ -6,22 +6,43 @@ Son güncelleme: 2026-11-16
 
 | Adım | Kanıt |
 |---|---|
-| Repo + CI (3 OS) | https://github.com/erkinemreta1/zerre-tts, Actions yeşil |
-| Türkçe frontend | `lang/tr.py`, 62 token / 45 fonem, 34 test geçiyor |
+| Repo + CI (5 iş: 3 OS + package + onnx) | https://github.com/erkinemreta1/zerre-tts, yeşil |
+| Türkçe frontend | `lang/tr.py`, 62 token / 45 fonem, 34 test |
 | Taşınabilirlik | `filelock`, `ZERRE_ESPEAK` keşfi, yolsuz kaynak ağacı testi |
-| Veri seti incelemesi | 48 kHz doğrulandı (kartlarda yazmıyordu) |
-| Tam korpus | 8.650 klip, 8.0 sa MK + 8.01 sa NK = 16.01 sa |
-| Akustik hazırlık | YIN + otokorelasyon ötümlülük, `feature_version: 3` |
-| Hizalama | 24 kliplik probe: 0.843 / 0.884 (upstream 0.58-0.66) |
-| ONNX yolu | 20.4 MB export, PyTorch ile korelasyon 0.9818 (gürültü tabanı 0.9820) |
-| Web demosu | `web/public/` + 25.344 kelimelik sözlük (%99.98), Pages workflow |
+| Korpus | 8.650 klip · MK 8.0 sa + NK 8.0 sa (48 kHz kaynaktan 24 kHz) |
+| Akustik özellikler | 8.650 `.pt`, YIN + otokorelasyon ötümlülük |
+| Hizalama | **6.346 kabul / 8.491 (%74.7)**, 11.93 saat |
+| Onay/test setleri | validation 63 klip, test 54 klip |
+| Paket bütünlüğü | `package_training.py`: eksik dosya 0, parmak izi uyuşmazlığı 0 |
+| CPU eğitim smoke'u | 6 step, loss 56.8 → 43.6, 13-17x realtime |
+| ONNX yolu | 20.4 MB export, PyTorch ile korelasyon 0.9818 (taban 0.9820) |
+| Web demosu | 25.344 kelimelik sözlük, eSpeak ile token oranı 0.9975 |
+
+## Hizalama sonuçları
+
+| Split | Kabul | Red | Saat | Ses |
+|---|---:|---:|---:|---|
+| train | 6.346 | 2.145 | 11.93 | MK 5.75 · NK 6.17 |
+| validation | 63 | 22 | 0.12 | MK 0.06 · NK 0.05 |
+| test | 54 | 20 | 0.10 | MK 0.05 · NK 0.05 |
+
+Red gerekçeleri (train): `weak_alignment` 1.771, `low_confidence` 786,
+`vowels_not_voiced` 160, `overlong_phone` 85.
+
+Kalite probu (tüm korpus):
+
+| Ses | ünlü→ötsüz | sürtünmeli→ünlü |
+|---|---:|---:|
+| MK | 0.874 | 0.933 |
+| NK | 0.931 | 0.983 |
+
+Upstream İngilizce referansı 0.58-0.66; Türkçe hizalaması daha keskin.
 
 ## Sıradaki
 
-1. Annotasyonun bitmesi (`data/tr/annotations/{train,validation,test}.jsonl`).
-2. `scripts/package_training.py` ile bütünlük kontrolü + HF'ye yükleme.
-3. Kiralık 4090'da eğitim (`docs/train.md`).
-4. Export → `web/public/model.onnx` → Pages demosu canlı.
+1. `hf upload` ile `annotations` + `features_full` paketini yükle.
+2. Kiralık 4090'da eğitim (`docs/train.md`), 55-65k step.
+3. Export → `web/public/model.onnx` → Pages demosu canlı.
 
 ## Engeller
 
@@ -44,4 +65,3 @@ Sayfa 30 saniyede bir kendini yeniler; yeni sayıları görmek için betiği tek
 ```powershell
 while ($true) { uv run python scripts/status_report.py; Start-Sleep 30 }
 ```
-
