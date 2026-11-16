@@ -1,75 +1,82 @@
 # Modal'da eğitim
 
-Modal, sunucusuz GPU kiralar; 4090 aramana gerek yok. Bu repo için hazır dosya:
-`modal_train.py`.
+Modal sunucusuz GPU kiralar; 4090 aramana gerek yok. Hazır dosya: `modal_train.py`.
 
-## Tek seferlik kurulum
+## Hız ölçümü (bu makine)
+
+| Yön | Hız |
+|---|---:|
+| İndirme | 68.5 Mbps |
+| **Yükleme** | **14.2 Mbps** |
+
+Buna göre iki yol var:
+
+| Yol | Yüklenecek | Süre | Modal'da ek iş |
+|---|---:|---:|---:|
+| **A. Sadece parquet** (önerilen) | 1.38 GB | **~13 dk** | prepare + hizalama, ~30 dk |
+| B. Hazır paket | 6.9 GB | ~65 dk | yok |
+
+## Yol A — parquet yükle, gerisini Modal'da hesapla
 
 ```bash
 uv pip install modal
-modal token new          # tarayıcı açılır, hesabınla onaylarsın
+modal token new                      # tarayıcı, senin hesabın
 modal volume create zerre-tts
+
+# 1.38 GB
+modal volume put zerre-tts data/tr/full.parquet /raw/full.parquet
+
+# özellikler + hizalama (L4'te ~30 dk; CPU'da 1.5 saat olan hizalama GPU'da dakikalar)
+modal run modal_train.py::data_stage
+
+# eğitim
+modal run modal_train.py --steps 65000 --hours 11
 ```
 
-## Veriyi yükle (6.9 GB, bir kez)
+`data_stage` şunları yapar: `prepare_parallel` (14 işçi) → validation/test
+özellikleri → `zerre.annotate --device cuda` → `package_training` bütünlük
+kontrolü. Hepsi `/data` volume'una yazar.
+
+## Yol B — hazır paketi yükle
 
 ```bash
 modal volume put zerre-tts data/tr/annotations /annotations
 modal volume put zerre-tts data/tr/features_full /features
-```
-
-Alternatif: veriyi Hugging Face'e yükleyip konteynerde indirmek (veri merkezi
-bandı daha hızlı). O durumda `modal_train.py` içindeki `train()` başına bir
-`hf_hub_download` eklenir.
-
-## Eğitim
-
-```bash
-# tek komut, bitene kadar bekler
 modal run modal_train.py --steps 65000 --hours 11
 ```
 
-- `--hours 11` → `--max-seconds 39600`: süre dolunca checkpoint yazıp çıkar.
-- Aynı komutu tekrar çalıştırırsan `last.pt` varsa **kaldığı yerden devam eder**.
-- Checkpoint'ler Modal Volume'da kalır (`/data/runs/tr-l4`).
-
-İzleme:
+## İzleme ve örnek
 
 ```bash
-modal run modal_train.py::status          # son step, loss, hız
-modal app logs <app-id>                    # canlı log
-```
+modal run modal_train.py::status
+modal app logs <app-id>
 
-## Örnek sentez (checkpoint indirmeden)
-
-```bash
 modal run modal_train.py::sample --text "Merhaba dünya, bu bir deneme." --voice MK
 modal volume get zerre-tts runs/tr-l4/sample.wav ./sample.wav
-```
-
-## Sonucu indir
-
-```bash
 modal volume get zerre-tts runs/tr-l4 ./runs/tr-l4
 ```
 
-## GPU seçimi ve maliyet
+## GPU ve maliyet
 
-| GPU | Yaklaşık fiyat | Not |
+| GPU | Yaklaşık | Not |
 |---|---|---|
-| T4 (16 GB) | ~0.59 $/sa | En ucuz; yavaş, bf16 yok |
-| **L4 (24 GB)** | **~0.80 $/sa** | Bu model için dengeli seçim |
-| A10G (24 GB) | ~1.10 $/sa | L4'ten hızlı |
-| A100 40 GB | ~2.10 $/sa | Gerekmiyor, model 4.5M parametre |
+| T4 16 GB | ~0.59 $/sa | En ucuz, yavaş |
+| **L4 24 GB** | **~0.80 $/sa** | Bu model için dengeli |
+| A10G 24 GB | ~1.10 $/sa | L4'ten hızlı |
+| A100 40 GB | ~2.10 $/sa | Gerekmiyor |
 
-11 saat L4 ≈ **9 $**. Modal'ın aylık ücretsiz kredisi (≈30 $) bunu karşılar.
+11 saat L4 ≈ **9 $** + 30 dk veri işi ≈ 0.40 $. Modal'ın aylık ücretsiz kredisi
+(~30 $) bunu karşılar.
 
-## Bilinen notlar
+## Teknik notlar
 
-- `annotations.json` içindeki `acoustic_root` Windows yolu taşıyor; `zerre.data`
-  bunu şu sırayla çözer: açık argüman → `ZERRE_ACOUSTIC_ROOT` → kayıtlı yol →
-  `annotations/../features_full`. Modal'da dizin yapısı ` /data/annotations` +
-  `/data/features_full` olduğu için ek ayar gerekmez.
-- Fonemleme eğitim sırasında gerekmez (token'lar hazır), yani konteynerde eSpeak
-  şart değil; yine de `sample()` için imaja kuruldu.
-- `--max-seconds` dolduğunda çıkması normaldir; tekrar `modal run` ile devam eder.
+- `annotations.json` içindeki `acoustic_root` Windows yolu taşır; `zerre.data`
+  sırayla çözer: açık argüman → `ZERRE_ACOUSTIC_ROOT` → kayıtlı yol →
+  `annotations/../features_full`. Modal'da ek ayar gerekmez.
+- Eğitim sırasında fonemlemeye gerek yok (token'lar hazır); eSpeak yalnızca
+  `data_stage` ve `sample` için imajda.
+- Hizalayıcı (`wav2vec2-lv-60-espeak-cv-ft`) imaja gömülür, çünkü kod onu
+  `local_files_only=True` ile yükler.
+- `--max-seconds` dolunca çıkar; aynı `modal run` komutu `last.pt`'den devam eder.
+- Sürümler yerelde üretilen özelliklerle uyumlu olsun diye sabitlendi
+  (numpy, librosa, soundfile, soxr, pyarrow).

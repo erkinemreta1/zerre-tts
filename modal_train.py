@@ -1,21 +1,27 @@
 """Train zerre-tts on Modal (serverless GPU).
 
-Setup once:
-    pip install modal
-    modal token new                 # opens the browser, needs your account
-    modal volume create zerre-tts   # persistent store for data and checkpoints
+Two ways to get the data there. The second is five times faster on a normal home
+upload (measured here: 14.2 Mbps up, 68.5 Mbps down).
 
-Upload the prepared bundle once (6.9 GB):
+A. Upload the prepared bundle (6.9 GB, ~65 min):
     modal volume put zerre-tts data/tr/annotations /annotations
     modal volume put zerre-tts data/tr/features_full /features
 
-Train (L4 is the cheapest GPU that fits this model):
+B. Upload only the corpus parquet (1.38 GB, ~13 min) and prepare + align on
+   Modal, where the GPU does the alignment in minutes:
+    modal volume put zerre-tts data/tr/full.parquet /raw/full.parquet
+    modal run modal_train.py::data_stage
+
+Then, in both cases:
     modal run modal_train.py --steps 65000 --hours 11
+    modal run modal_train.py::sample --text "Merhaba dünya." --voice MK
 
-Synthesize from the latest checkpoint without downloading it:
-    modal run modal_train.py::sample --text "Merhaba dünya, bu bir deneme."
+Setup once:
+    pip install modal
+    modal token new
+    modal volume create zerre-tts
 
-Pull the result back:
+Pull results back:
     modal volume get zerre-tts runs/tr-l4 ./runs/tr-l4
 """
 
@@ -25,19 +31,63 @@ APP_NAME = "zerre-tts-train"
 VOLUME = "zerre-tts"
 DATA = "/data"
 
+def _download_aligner():
+    from huggingface_hub import snapshot_download
+
+    snapshot_download("facebook/wav2vec2-lv-60-espeak-cv-ft")
+
+
+# Versions pinned to the machine the corpus was prepared on, so features and
+# tokens stay comparable. torch is left floating: the CUDA build differs.
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("libsndfile1", "espeak-ng", "ffmpeg")
     .pip_install(
-        "torch==2.5.1", "numpy<3", "soundfile", "filelock", "librosa>=0.10.2",
-        "soxr", "pyarrow",
+        "torch>=2.4,<3", "torchaudio>=2.4,<3", "numpy==2.4.6", "soundfile==0.14.0",
+        "filelock>=3.13,<4", "librosa==0.11.0", "soxr==1.1.0", "pyarrow==26.0.1",
+        "transformers>=4.40,<5", "scipy>=1.10,<2", "huggingface-hub>=0.34,<2",
     )
+    # The annotation recogniser is loaded with local_files_only=True, so it has
+    # to be in the image rather than fetched at run time.
+    .run_function(_download_aligner)
     .add_local_dir("src/zerre", remote_path="/root/zerre/zerre")
+    .add_local_dir("scripts", remote_path="/root/zerre/scripts")
     .env({"PYTHONPATH": "/root/zerre", "PYTHONUNBUFFERED": "1", "OMP_NUM_THREADS": "8"})
 )
 
 app = modal.App(APP_NAME, image=image)
 volume = modal.Volume.from_name(VOLUME, create_if_missing=True)
+
+
+@app.function(gpu="L4", timeout=2 * 3600, volumes={DATA: volume}, cpu=16, memory=32768)
+def data_stage(parquet: str = f"{DATA}/raw/full.parquet"):
+    """Prepare acoustic features and align the corpus on Modal.
+
+    Input:  the corpus parquet (1.38 GB) at ``parquet``.
+    Output: /data/features_full and /data/annotations in the volume.
+    """
+    import subprocess
+    from pathlib import Path
+
+    if not Path(parquet).exists():
+        raise SystemExit(f"{parquet} is missing; run: modal volume put {VOLUME} data/tr/full.parquet /raw/full.parquet")
+
+    def run(command):
+        print(" ".join(command), flush=True)
+        subprocess.run(command, check=True)
+
+    run(["python", "scripts/prepare_parallel.py", "--inputs", parquet,
+         "--output", f"{DATA}/features_full", "--workers", "14"])
+    for split in ("validation", "test"):
+        run(["python", "-m", "zerre.prepare", "--inputs", parquet, "--split", split,
+             "--output", f"{DATA}/features_full"])
+    run(["python", "-m", "zerre.annotate", "--features", f"{DATA}/features_full",
+         "--output", f"{DATA}/annotations", "--dataset-revision", "local",
+         "--device", "cuda", "--splits", "train", "validation", "test"])
+    run(["python", "scripts/package_training.py", "--annotations", f"{DATA}/annotations",
+         "--features", f"{DATA}/features_full", "--output", f"{DATA}/reports/training-bundle.json"])
+    volume.commit()
+    return f"{DATA}/annotations"
 
 
 @app.function(gpu="L4", timeout=12 * 3600, volumes={DATA: volume}, cpu=8, memory=16384)
@@ -97,7 +147,6 @@ def status(name: str = "tr-l4"):
     directory = Path(f"{DATA}/runs/{name}")
     if not directory.exists():
         return {"exists": False}
-    files = sorted(path.name for path in directory.iterdir())
     journal = directory / "metrics.jsonl"
     last = {}
     if journal.exists():
@@ -105,8 +154,9 @@ def status(name: str = "tr-l4"):
         if lines:
             import json
             last = json.loads(lines[-1])
-    return {"exists": True, "files": files, "last": {key: last.get(key) for key in
-            ("step", "loss", "duration_length_error", "voicing_accuracy", "steps_per_second")}}
+    return {"exists": True, "files": sorted(path.name for path in directory.iterdir()),
+            "last": {key: last.get(key) for key in
+                     ("step", "loss", "duration_length_error", "voicing_accuracy", "steps_per_second")}}
 
 
 @app.local_entrypoint()
