@@ -1,10 +1,25 @@
 # Durum
 
-Son güncelleme: 2026-11-16 · **duraklatıldı (kullanıcı kararı)**
+Son güncelleme: 2026-11-16 · **eğitim Modal'da sürüyor (`tr-v1`)**
 
-Kaldığı yer: veri ve hizalama tamam, eğitim başlamadı. CPU denemesi 125. step'te
-durduruldu (`runs/cpu-memo`, checkpoint yok). Devam etmek için gereken tek şey
-GPU; komutlar `docs/train.md`'de.
+| | |
+|---|---|
+| Veri | 6.347 klip · 11.93 sa (Modal volume, T4'te hizalandı: 568 sn) |
+| Eğitim | 65.000 step hedefi, 6 saatlik dilim, L4 |
+| Ölçülen | GAN sonrası 2.12 step/s · GPU %77 · 186 ses-sn/sn |
+| Maliyet | veri işi ~0.10 $ + probe'lar ~0.10 $ + eğitim ~4.8 $ |
+
+Örnek almak için (GPU sırası beklemeden, CPU'da):
+
+```bash
+uv run python scripts/taste.py                 # iki ses, son checkpoint
+uv run python scripts/taste.py --voice NK --text "İstediğin cümle."
+```
+
+Dosya adı checkpoint'in gerçek adımını taşır: `samples/taste-step07000-mk.wav`.
+
+Kaldığı yer: veri ve hizalama tamam, eğitim başladı. Devam/izleme komutları
+`docs/modal.md`'de.
 
 ## Bitti
 
