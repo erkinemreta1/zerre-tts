@@ -7,6 +7,7 @@ byte encoding from the old front end and is never read here.
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 import torch
@@ -46,6 +47,34 @@ def continuous_pitch(pitch, voiced, default=0.0, window=5, tolerance=0.45):
     return curve, trusted.float()
 
 
+def resolve_acoustic_root(manifest, metadata, override=None):
+    """Where the feature files live.
+
+    ``acoustic_root`` is written by the annotation run and is an absolute path on
+    the machine that made it, which breaks as soon as the bundle moves (another
+    box, a container, Modal). Resolution order: explicit override, the
+    ``ZERRE_ACOUSTIC_ROOT`` environment variable, the recorded path when it
+    still exists, then a ``features_full``/``features`` sibling of the
+    annotations directory.
+    """
+    if override:
+        return Path(override)
+    from_env = os.environ.get("ZERRE_ACOUSTIC_ROOT")
+    if from_env:
+        return Path(from_env)
+    recorded = metadata.get("acoustic_root")
+    if recorded and Path(recorded).is_dir():
+        return Path(recorded)
+    manifest = Path(manifest)
+    for name in ("features_full", "features"):
+        candidate = manifest.parent.parent / name
+        if candidate.is_dir():
+            return candidate
+    if recorded:
+        return Path(recorded)
+    raise ValueError("cannot find the acoustic feature directory; set ZERRE_ACOUSTIC_ROOT")
+
+
 class AnnotatedDataset:
     def __init__(self, manifest, config, acoustic_root=None, cache=True, voiced_vowels=False):
         self.manifest = Path(manifest)
@@ -56,7 +85,7 @@ class AnnotatedDataset:
         if not metadata.get("complete"):
             raise ValueError("annotation run is incomplete; finish it with --resume before training")
         self.annotation = metadata["fingerprint"]
-        self.root = Path(acoustic_root or metadata["acoustic_root"])
+        self.root = resolve_acoustic_root(self.manifest, metadata, acoustic_root)
         self.fingerprint = hashlib.sha256(self.manifest.read_bytes()).hexdigest()
         # Physical LF-delimited records: Unicode separators inside text are data.
         self.rows = [json.loads(line) for line in self.manifest.read_text(encoding="utf-8").split("\n") if line.strip()]
