@@ -68,6 +68,28 @@ modal volume get zerre-tts runs/tr-l4 ./runs/tr-l4
 11 saat L4 ≈ **9 $** + 30 dk veri işi ≈ 0.40 $. Modal'ın aylık ücretsiz kredisi
 (~30 $) bunu karşılar.
 
+## PC kapansa da sürsün (kalıcı app)
+
+`modal run` ile başlatılan koşu, yerel istemci bağlantısı koptuğunda Modal
+tarafından durdurulabilir (en fazla son checkpoint'e kadar kayıp, ≤1000 step).
+Garantili sürdürmek için app'i bir kez deploy et, sonra işi **spawn** et:
+
+```bash
+modal deploy modal_train.py                      # app'i kurar, iş başlatmaz
+uv run python scripts/modal_spawn.py --hours 6 --name tr-v1
+```
+
+Spawn edilen koşu Modal'da bağımsız çalışır: laptop kapansa, uykuya girse,
+internet gitse de devam eder. İzlemek için yerel süreç gerekmez:
+
+```bash
+modal app logs zerre-tts-train
+uv run python scripts/modal_spawn.py --dry-run   # ne göndereceğini göster
+```
+
+Checkpoint mantığı aynı: `last.pt` varsa `--resume` ile kaldığı yerden başlar,
+yani spawn'ı tekrar çağırmak koşuyu sürdürür.
+
 ## Para yakmadan ilerleme (önerilen sıra)
 
 Her adım tek tek ölçülür, gereksiz GPU dakikası harcanmaz:
