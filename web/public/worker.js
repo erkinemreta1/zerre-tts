@@ -5,7 +5,7 @@
 
 const ORT = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/";
 let session, config, symbols, lexicon;
-const VERSION = "4";
+const VERSION = "6";
 
 const status = (text, progress) => postMessage({ type: "status", text, progress });
 
