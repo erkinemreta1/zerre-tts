@@ -46,6 +46,7 @@ image = (
         "torch>=2.4,<3", "torchaudio>=2.4,<3", "numpy==2.4.6", "soundfile==0.14.0",
         "filelock>=3.13,<4", "librosa==0.11.0", "soxr==1.1.0", "pyarrow==26.0.1",
         "transformers>=4.40,<5", "scipy>=1.10,<2", "huggingface-hub>=0.34,<2",
+        "nvidia-ml-py>=12",
     )
     .env({"PYTHONPATH": "/root/zerre", "PYTHONUNBUFFERED": "1", "OMP_NUM_THREADS": "8"})
     # The annotation recogniser is loaded with local_files_only=True, so it has
@@ -151,11 +152,19 @@ def train(steps: int = 65000, hours: float = 11.0, name: str = "tr-l4",
     stop = threading.Event()
 
     def monitor():
-        import torch
+        try:
+            import pynvml
 
+            pynvml.nvmlInit()
+            handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+        except Exception as error:  # noqa: BLE001 - measurement is optional
+            print(f"GPU monitor unavailable: {error}", flush=True)
+            return
         while not stop.is_set():
-            if torch.cuda.is_available():
-                samples.append(float(torch.cuda.utilization()))
+            try:
+                samples.append(float(pynvml.nvmlDeviceGetUtilizationRates(handle).gpu))
+            except Exception:  # noqa: BLE001
+                pass
             stop.wait(2.0)
 
     thread = threading.Thread(target=monitor, daemon=True)
@@ -214,5 +223,7 @@ def status(name: str = "tr-l4"):
 
 
 @app.local_entrypoint()
-def main(steps: int = 65000, hours: float = 11.0, name: str = "tr-l4"):
-    print(train.remote(steps=steps, hours=hours, name=name))
+def main(steps: int = 65000, hours: float = 11.0, name: str = "tr-l4",
+         batch_frames: int = 9000, max_batch: int = 32, gan_start: int = 4000):
+    print(train.remote(steps=steps, hours=hours, name=name, batch_frames=batch_frames,
+                       max_batch=max_batch, gan_start=gan_start))
