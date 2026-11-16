@@ -55,6 +55,11 @@ class Config:
     energy_mean: float = -4.0
     energy_scale: float = 2.0
     pitch_reference_hz: float = 200.0
+    # Free-running synthesis clamps the predicted pitch to a speech band, so a
+    # rare token (`!`, which the corpus barely contains) cannot turn into a
+    # scream. Feature extraction keeps using f0_min/f0_max.
+    synth_f0_min: float = 60.0
+    synth_f0_max: float = 420.0
 
     def __post_init__(self):
         from . import lang

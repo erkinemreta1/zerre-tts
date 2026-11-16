@@ -369,6 +369,16 @@ class TinyVoca(nn.Module):
             prosody = torch.cat((prosody[..., :1], torch.where(vowel, prosody[..., 1].clamp_min(2.0), prosody[..., 1])[..., None],
                                  prosody[..., 2:]), dim=-1)
         prosody = self.widen_pitch(prosody, frame_mask, pitch_range)
+        # The pitch predictor occasionally spikes a single syllable an octave up
+        # (a shout on a 120 Hz voice). Keep the contour inside six semitones of
+        # the utterance's own mean; questions and emphasis move far less. A
+        # masked mean, not a median: it has to survive the ONNX export.
+        voiced = (prosody[..., 1] > 0).float()
+        total = (prosody[..., 0] * voiced).sum(dim=1)
+        count = voiced.sum(dim=1).clamp_min(1.0)
+        centre = total / count
+        pitch = prosody[..., 0].clamp(centre[:, None] - 0.35, centre[:, None] + 0.35)
+        prosody = torch.cat((pitch[..., None], prosody[..., 1:]), dim=-1)
         acoustic = self.decode(prosody_hidden, self.hard_prosody(prosody), frame_mask)
         # One noise stream per row, drawn at the row's own length, so batching or
         # padding never changes a row's audio.
@@ -377,5 +387,8 @@ class TinyVoca(nn.Module):
         pitch = prosody[..., 0] + pitch_shift
         if pitch_jitter > 0:
             pitch = pitch + self.pitch_wobble(pitch.shape, pitch_jitter, seed, pitch.device)
+        c = self.config
+        pitch = pitch.clamp(math.log(c.synth_f0_min / c.pitch_reference_hz),
+                            math.log(c.synth_f0_max / c.pitch_reference_hz))
         wave = self.vocoder(acoustic, self.frequency(pitch), frame_lengths, noise=noise.to(hidden.device))
         return wave, frame_lengths * self.config.hop, {"durations": durations, "prosody": prosody, "frame_mask": frame_mask}
