@@ -9,7 +9,8 @@ Son güncelleme: 2026-11-16 · **eğitim bitti, model hazır**
 | WER (test, aynı domain) | **%1.3** (kayıt: %0.0) |
 | WER (yeni cümleler) | **%12.7** |
 | Süre oranı | 0.95 · mel DTW 0.69 |
-| Boyut | `inference.pt` 17.4 MB · `model.onnx` 20.4 MB |
+| Boyut | **int8 8.1 MB** (fp32 21.4 MB) · `model.onnx` demoda int8 |
+| Tarayıcı | 8.6 sn ses **460 ms**'de (int8, WASM) |
 
 Örnek dinlemek için (CPU'da, GPU sırası beklemez):
 
