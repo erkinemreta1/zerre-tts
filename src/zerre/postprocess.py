@@ -32,8 +32,37 @@ def _design(sample_rate, highpass, lowpass, presence_hz, presence_gain_db, taps=
     return firwin2(taps, freq, gains)
 
 
+def denoise(wave, sample_rate, floor=0.06, oversubtract=1.4, n_fft=1024, hop=256):
+    """Gentle spectral subtraction against the clip's own noise floor.
+
+    The vocoder leaves a low-level buzz that survives the high-pass; the model
+    itself is fine. Estimating the floor from the quietest 10% of frames per bin
+    removes it without touching the harmonics.
+    """
+    import numpy as np
+
+    audio = np.asarray(wave, dtype=np.float64)
+    if audio.size < n_fft:
+        return audio.astype(np.float32)
+    window = np.hanning(n_fft)
+    frames = 1 + (len(audio) - n_fft) // hop
+    index = np.arange(frames)[:, None] * hop + np.arange(n_fft)[None, :]
+    spectrum = np.fft.rfft(audio[index] * window, axis=1)
+    magnitude = np.abs(spectrum)
+    noise = np.percentile(magnitude, 10, axis=0)
+    cleaned = np.maximum(magnitude - oversubtract * noise, floor * magnitude) * np.exp(1j * np.angle(spectrum))
+    output = np.zeros(len(audio) + n_fft, dtype=np.float64)
+    weight = np.zeros_like(output)
+    for frame in range(frames):
+        segment = np.fft.irfft(cleaned[frame], n=n_fft) * window
+        output[frame * hop:frame * hop + n_fft] += segment
+        weight[frame * hop:frame * hop + n_fft] += window ** 2
+    output = output[: len(audio)] / np.maximum(weight[: len(audio)], 1e-8)
+    return output.astype(np.float32)
+
+
 def polish(wave, sample_rate, highpass=90.0, lowpass=11000.0, presence_hz=3000.0,
-           presence_gain_db=2.5, target_rms_db=-20.0, peak=0.95):
+           presence_gain_db=2.5, target_rms_db=-20.0, peak=0.95, subtract_noise=False):
     """High-pass, presence shelf, loudness match, soft limit. Returns float32."""
     from scipy.signal import fftconvolve
 
@@ -43,6 +72,8 @@ def polish(wave, sample_rate, highpass=90.0, lowpass=11000.0, presence_hz=3000.0
     if audio.size == 0:
         return audio.astype(np.float32)
     audio = audio - audio.mean()
+    if subtract_noise:
+        audio = denoise(audio, sample_rate).astype(np.float64)
 
     kernel = _design(sample_rate, highpass, lowpass, presence_hz, presence_gain_db)
     audio = fftconvolve(audio, kernel, mode="same")

@@ -80,19 +80,44 @@
       const phonemes = document.getElementById("phonemes");
       let sampleRate = 24000;
       let context = null;
+      let chain = null;
       let queue = [];
       let playing = false;
       let current = 0;
+
+      // Same idea as zerre.postprocess.polish: drop the sub-90 Hz boom, lift the
+      // 3 kHz presence band a touch, roll off the vocoder hiss. Biquads instead
+      // of the offline FIR so the browser can run it per sentence.
+      function buildChain() {
+        const highpass = context.createBiquadFilter();
+        highpass.type = "highpass";
+        highpass.frequency.value = 90;
+        highpass.Q.value = 0.7;
+        const presence = context.createBiquadFilter();
+        presence.type = "peaking";
+        presence.frequency.value = 3000;
+        presence.Q.value = 0.8;
+        presence.gain.value = 2.5;
+        const lowpass = context.createBiquadFilter();
+        lowpass.type = "lowpass";
+        lowpass.frequency.value = 11000;
+        lowpass.Q.value = 0.7;
+        highpass.connect(presence).connect(lowpass).connect(context.destination);
+        return highpass;
+      }
 
       function playNext() {
         if (playing || !queue.length) return;
         const chunk = queue.shift();
         playing = true;
+        let loudest = 0;
+        for (let i = 0; i < chunk.length; i++) loudest = Math.max(loudest, Math.abs(chunk[i]));
+        if (loudest > 0) for (let i = 0; i < chunk.length; i++) chunk[i] *= 0.95 / loudest;
         const buffer = context.createBuffer(1, chunk.length, sampleRate);
         buffer.copyToChannel(chunk, 0);
         const source = context.createBufferSource();
         source.buffer = buffer;
-        source.connect(context.destination);
+        source.connect(chain);
         source.onended = () => { playing = false; playNext(); };
         source.start();
       }
@@ -127,7 +152,10 @@
       };
 
       speak.addEventListener("click", () => {
-        if (!context) context = new AudioContext();
+        if (!context) {
+          context = new AudioContext();
+          chain = buildChain();
+        }
         context.resume();
         queue = [];
         speak.disabled = true;

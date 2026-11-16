@@ -26,6 +26,7 @@ def collect():
         (card, "README.md"),
         (RUN / "inference.pt", "inference.pt"),
         (RUN / "model.onnx", "onnx/model.onnx"),
+        (RUN / "model-int8.onnx", "onnx/model-int8.onnx"),
         (RUN / "model.json", "onnx/model.json"),
         (RUN / "metrics.jsonl", "metrics/metrics.jsonl"),
         (RUN / "gpu.json", "metrics/gpu.json"),
