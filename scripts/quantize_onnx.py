@@ -18,7 +18,11 @@ def main(argv=None):
     from onnxruntime.quantization import QuantType, quantize_dynamic
 
     before = args.input.stat().st_size
-    quantize_dynamic(str(args.input), str(args.output), weight_type=QuantType.QInt8)
+    # Only MatMul: quantising Conv turns the depthwise layers into ConvInteger,
+    # which onnxruntime-web's WASM backend cannot execute ("Could not find an
+    # implementation for ConvInteger"), so the browser session would not start.
+    quantize_dynamic(str(args.input), str(args.output), weight_type=QuantType.QInt8,
+                     op_types_to_quantize=["MatMul"])
     after = args.output.stat().st_size
     print(f"{args.input.name}: {before / 1e6:.2f} MB")
     print(f"{args.output.name}: {after / 1e6:.2f} MB  ({after / before * 100:.1f}% of the original)")
