@@ -1,0 +1,26 @@
+[
+  {
+    "file": "mk-2.wav",
+    "voice": "MK",
+    "seconds": 4.77,
+    "text": "Apansız arkadaşımın bir şeyden ürktüğünü sezdim, arandım."
+  },
+  {
+    "file": "mk-1.wav",
+    "voice": "MK",
+    "seconds": 7.54,
+    "text": "Durumu anlayan İngiliz fazla uzatmadı. Fikrini değiştirirse bu pazarlığın kaldığı yerden başlayabileceğini..."
+  },
+  {
+    "file": "nk-2.wav",
+    "voice": "NK",
+    "seconds": 7.0,
+    "text": "Aradan aylar geçtiği halde bir türlü bu tesirden kurtulamadım. Ne zaman kendimle baş başa kalsam,"
+  },
+  {
+    "file": "nk-1.wav",
+    "voice": "NK",
+    "seconds": 6.39,
+    "text": "Belki hiç ummadığımız şeyler görmemiz, beklemediğimiz zenginliklerle karşılaşmamız mümkün olur."
+  }
+]
