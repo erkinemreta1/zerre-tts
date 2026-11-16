@@ -47,12 +47,13 @@ image = (
         "filelock>=3.13,<4", "librosa==0.11.0", "soxr==1.1.0", "pyarrow==26.0.1",
         "transformers>=4.40,<5", "scipy>=1.10,<2", "huggingface-hub>=0.34,<2",
     )
+    .env({"PYTHONPATH": "/root/zerre", "PYTHONUNBUFFERED": "1", "OMP_NUM_THREADS": "8"})
     # The annotation recogniser is loaded with local_files_only=True, so it has
     # to be in the image rather than fetched at run time.
     .run_function(_download_aligner)
+    # add_local_* must be the last build steps: Modal mounts them per container.
     .add_local_dir("src/zerre", remote_path="/root/zerre/zerre")
     .add_local_dir("scripts", remote_path="/root/zerre/scripts")
-    .env({"PYTHONPATH": "/root/zerre", "PYTHONUNBUFFERED": "1", "OMP_NUM_THREADS": "8"})
 )
 
 app = modal.App(APP_NAME, image=image)
@@ -90,11 +91,30 @@ def data_stage(parquet: str = f"{DATA}/raw/full.parquet"):
     return f"{DATA}/annotations"
 
 
-@app.function(gpu="L4", timeout=12 * 3600, volumes={DATA: volume}, cpu=8, memory=16384)
+@app.function(gpu="L4", timeout=12 * 3600, volumes={DATA: volume}, cpu=8, memory=32768)
 def train(steps: int = 65000, hours: float = 11.0, name: str = "tr-l4",
           batch_frames: int = 9000, max_batch: int = 32, gan_start: int = 4000):
+    """Train, keeping the GPU fed and reporting how busy it actually was.
+
+    Two things waste money on a rented GPU: reading features from the network
+    volume during training, and an under-sized batch that leaves the card idle.
+    The features are copied to the container's local disk first (the dataset then
+    caches them in RAM), and a monitor thread records utilisation so a run can be
+    judged instead of guessed.
+    """
+    import json
+    import os
+    import shutil
     import subprocess
+    import threading
+    import time
     from pathlib import Path
+
+    local_features = "/tmp/features_full"
+    if not Path(local_features).exists():
+        print(f"copying features to local disk: {DATA}/features_full -> {local_features}", flush=True)
+        shutil.copytree(f"{DATA}/features_full", local_features)
+    os.environ["ZERRE_ACOUSTIC_ROOT"] = local_features
 
     output = f"{DATA}/runs/{name}"
     command = [
@@ -116,9 +136,33 @@ def train(steps: int = 65000, hours: float = 11.0, name: str = "tr-l4",
     if latest.exists():
         command += ["--resume", str(latest)]
         print(f"resuming from {latest}", flush=True)
+
+    samples = []
+    stop = threading.Event()
+
+    def monitor():
+        import torch
+
+        while not stop.is_set():
+            if torch.cuda.is_available():
+                samples.append(float(torch.cuda.utilization()))
+            stop.wait(2.0)
+
+    thread = threading.Thread(target=monitor, daemon=True)
+    thread.start()
     print(" ".join(command), flush=True)
-    subprocess.run(command, check=True)
-    volume.commit()
+    try:
+        subprocess.run(command, check=True)
+    finally:
+        stop.set()
+        thread.join(timeout=5)
+        if samples:
+            report = {"samples": len(samples), "mean_utilization": round(sum(samples) / len(samples), 1),
+                      "max_utilization": round(max(samples), 1),
+                      "below_50": round(sum(1 for value in samples if value < 50) / len(samples), 3)}
+            (Path(output) / "gpu.json").write_text(json.dumps(report), encoding="utf-8")
+            print(json.dumps(report), flush=True)
+        volume.commit()
     return output
 
 
