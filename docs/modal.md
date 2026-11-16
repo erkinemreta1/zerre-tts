@@ -68,6 +68,20 @@ modal volume get zerre-tts runs/tr-l4 ./runs/tr-l4
 11 saat L4 ≈ **9 $** + 30 dk veri işi ≈ 0.40 $. Modal'ın aylık ücretsiz kredisi
 (~30 $) bunu karşılar.
 
+## Para yakmadan ilerleme (önerilen sıra)
+
+Her adım tek tek ölçülür, gereksiz GPU dakikası harcanmaz:
+
+| Adım | Komut | Süre | Yaklaşık |
+|---|---|---|---:|
+| Veri işi | `modal volume put ...` + `modal run modal_train.py::data_stage` | ~30 dk | 0.40 $ |
+| CUDA smoke | `modal run modal_train.py --steps 20 --hours 0.1 --name smoke` | ~2 dk | 0.03 $ |
+| İlk koşu | `modal run modal_train.py --hours 4 --steps 65000` | 4 sa | 3.20 $ |
+| Devam | aynı komut (resume) | 4 sa | 3.20 $ |
+
+Toplam 11 saatlik eğitim ≈ **6.5-8 $**. Konteyner boşta para yakmaz: fonksiyon
+biter, GPU kapanır. `--max-seconds` sınırı her koşuyu kapatır.
+
 ## Teknik notlar
 
 - `annotations.json` içindeki `acoustic_root` Windows yolu taşır; `zerre.data`
