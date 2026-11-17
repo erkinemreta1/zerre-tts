@@ -360,6 +360,8 @@ class TinyVoca(nn.Module):
         """
         import torch.nn.functional as F
 
+        pitch = pitch.detach()
+        voiced = voiced.detach()
         mask = (voiced > 0).to(pitch.dtype)
         weighted = pitch * mask
         kernel = torch.tensor([0.25, 0.5, 0.25], device=pitch.device, dtype=pitch.dtype).view(1, 1, 3)
@@ -372,6 +374,7 @@ class TinyVoca(nn.Module):
         centre = total / count
         return centre[:, None] + limit * torch.tanh((steady - centre[:, None]) / limit)
 
+    @torch.no_grad()
     def synthesize(self, tokens, stress, lengths, speakers, speed=1.0, pitch_shift=0.0, seed=0, pitch_range=1.0, pitch_jitter=0.0,
                    voiced_vowels=True):
         """Free-running synthesis: predicted durations, pitch, voicing and energy."""
