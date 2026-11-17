@@ -157,7 +157,7 @@
           sampleRate = data.sampleRate;
           data.voices.forEach((name, index) => {
             const option = document.createElement("option");
-            const label = { MK: "SES-A (erkek)", NK: "SES-B (kadın)" }[name] || `SES-${String.fromCharCode(65 + index)}`;
+            const label = { MK: "SES-A", NK: "SES-B" }[name] || `SES-${String.fromCharCode(65 + index)}`;
             option.value = String(index);
             option.textContent = label;
             voice.append(option);

@@ -28,7 +28,7 @@ ve tarayıcıda WebAssembly ile çalışır — sunucu, API, GPU gerekmez.
 |---|---|
 | Boyut | **8.5 MB int8** (fp32: 21.4 MB) |
 | Parametre | 4.5M |
-| Ses | 24 kHz, 2 ses: SES-A (erkek), SES-B (kadın) |
+| Ses | 24 kHz, 2 ses (SES-A, SES-B) |
 | Lisans | Apache-2.0 — ticari kullanım serbest |
 | Çalıştığı yer | Tarayıcı (WASM), CPU, ONNX Runtime, PyTorch |
 | Türkçe WER | **1.3%** (held-out 20 klip) · **12.7%** (8 yeni cümle) |

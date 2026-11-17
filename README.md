@@ -8,7 +8,7 @@ projesinden uyarlanmıştır (Apache-2.0), veri ve dil katmanı yenidir.
 **Ağırlıklar: https://huggingface.co/erkint/zerre-tts**
 
 - **8.5 MB int8 ONNX** (fp32: 21.4 MB) — quantization WER'i değiştirmiyor (15.3% → 15.3%).
-- ~4.5M parametre, 24 kHz, iki ses (`MK` erkek, `NK` kadın).
+- ~4.5M parametre, 24 kHz, iki ses (`SES-A`, `SES-B`).
 - Ölçüm: held-out test setinde **WER %1.3**, yeni cümlelerde **%12.7**
   (Whisper large-v3, Türkçe).
 - Fonem tabanlı: metin → eSpeak NG (`tr`) fonemleri → akustik model →
