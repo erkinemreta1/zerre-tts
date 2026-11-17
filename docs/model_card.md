@@ -28,7 +28,7 @@ ve tarayıcıda WebAssembly ile çalışır — sunucu, API, GPU gerekmez.
 |---|---|
 | Boyut | **8.5 MB int8** (fp32: 21.4 MB) |
 | Parametre | 4.5M |
-| Ses | 24 kHz, 2 ses (MK erkek, NK kadın) |
+| Ses | 24 kHz, 2 ses: SES-A (erkek), SES-B (kadın) |
 | Lisans | Apache-2.0 — ticari kullanım serbest |
 | Çalıştığı yer | Tarayıcı (WASM), CPU, ONNX Runtime, PyTorch |
 | Türkçe WER | **1.3%** (held-out 20 klip) · **12.7%** (8 yeni cümle) |
@@ -86,19 +86,26 @@ Metin→fonem modelin dışında: eSpeak NG `tr` veya demoda kullanılan sözlü
 
 ```bash
 python -m zerre.infer --checkpoint inference.pt --lang tr \
-  --text "Merhaba dünya." --voice MK --output hello.wav
+  --text "Merhaba dünya." --voice SES-A --output hello.wav
 ```
 
 ## Eğitim
 
-İki açık Türkçe sesli kitap korpusu (`omersaidd/tts_mazlum_kiper_tur`,
-`omersaidd/tts_nisan_kumru_tur`): 16 saat, 48→24 kHz indirildi, eSpeak fonem
+İki açık lisanslı Türkçe sesli kitap korpusu (kimlikler ve lisans notu:
+`docs/data_sources.md`): 16 saat, 48→24 kHz indirildi, eSpeak fonem
 tanıyıcıyla hizalandı, 6.347 klip (11.93 saat) kabul edildi. 65.000 step,
 tek L4'te ~6.5 saat, ~7 $.
 
+## Kişilik ve veri notu
+
+Sesler açık lisanslı kayıtlardan eğitildi; **klonlama yapılmadı**, konuşmacı
+kimliği iddia edilmiyor ve konuşmacılarla bir bağ bulunmuyor. Ayrıntı ve lisans
+çekinceleri: \docs/data_sources.md\. Ticari kullanımda hukuki değerlendirme
+kullanıcıya aittir.
+
 ## Sınırlar
 
-- İki sabit ses; klonlama ve streaming yok.
+- İki sabit ses (SES-A, SES-B); klonlama ve streaming yok.
 - Okuma tonu ağırlıklı; soru/ünlem prosodisi sınırlı.
 - Yabancı isimler ve kısaltmalar sık yanlış okunur.
 - WER ölçümleri küçük setlerde (20 klip / 8 cümle); mutlak değil, sanity check.

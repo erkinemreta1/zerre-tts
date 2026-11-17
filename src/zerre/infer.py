@@ -209,7 +209,10 @@ def main():
     elif FRONTEND_VARIABLE not in os.environ:
         match_frontend(args.checkpoint)
     model = load_model(args.checkpoint, args.device, check_frontend=not args.allow_frontend_mismatch)
-    voice = args.voice or model.config.speakers[0]
+    # The checkpoint stores internal speaker ids; the public names are neutral.
+    aliases = {"SES-A": model.config.speakers[0], "SES-B": model.config.speakers[1],
+               "A": model.config.speakers[0], "B": model.config.speakers[1]}
+    voice = aliases.get((args.voice or "").upper(), args.voice or model.config.speakers[0])
     if voice not in model.config.speakers:
         parser.exit(2, f"voice {voice!r} is not in this checkpoint; available: {', '.join(model.config.speakers)}\n")
     text = args.text if args.text is not None else args.text_file.read_text(encoding="utf-8")
