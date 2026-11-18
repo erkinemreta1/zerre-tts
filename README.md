@@ -86,14 +86,7 @@ provenance and licence caveats.
 - `docs/data.md` / `docs/alignment.md` — corpus and alignment details
 - `docs/train.md` / `docs/modal.md` — training runbooks (rented GPU / Modal)
 - `docs/launch.md` — press copy and prepared answers
-- `docs/mediakit.md` — media kit: one-liners, boilerplate, assets, facts
-- `docs/media/` — logo, og-image, banner (SVG)
-- `docs/media/` — logo, og-image and banner (SVG)
 
-## Media kit
-
-One-liners, EN/TR boilerplate, verified facts and assets live in
-[`docs/mediakit.md`](docs/mediakit.md); logos are in [`docs/media/`](docs/media/).
 
 ## Citation
 
