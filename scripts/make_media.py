@@ -16,15 +16,21 @@ ACCENT2 = "#5ad2b8"
 
 # One idea per asset: the wordmark IS the waveform (the hyphen becomes a pause,
 # "tts" is spoken by the second wave). No letters-as-signs.
-LOGO = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" width="720" height="160" role="img" aria-label="zerre-tts">
-  <rect width="720" height="160" fill="{PAPER}"/>
+LOGO = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 160" width="860" height="160" role="img" aria-label="zerre-tts">
+  <rect width="860" height="160" fill="{PAPER}"/>
   <text x="30" y="95" font-family="ui-monospace, 'Cascadia Code', Menlo, monospace" font-size="64" font-weight="700" fill="{INK}">zerre</text>
-  <g fill="none" stroke="{ACCENT}" stroke-width="12" stroke-linecap="round">
-    <path d="M330 70 l40 0" stroke="{PAPER}"/>
-    <path d="M380 45 a30 30 0 1 0 0.1 0"/>
-    <path d="M470 55 v50 m0 -25 q18 -18 30 6 l10 19"/>
-    <path d="M550 55 v50 m0 -25 q18 -18 30 6 l10 19"/>
-    <path d="M630 55 v50 m0 -25 q18 -18 30 6 l10 19"/>
+  <g fill="none" stroke="{ACCENT}" stroke-width="11" stroke-linecap="round">
+    <path d="M330 70 h14"/>
+    <path d="M392 100 v-64"/>
+    <path d="M428 88 v-40"/>
+    <path d="M464 82 v-28"/>
+    <path d="M500 82 v-28"/>
+    <path d="M536 88 v-40"/>
+    <path d="M572 100 v-64"/>
+    <path d="M620 82 a26 26 0 1 0 0.1 0" stroke="{ACCENT2}"/>
+    <path d="M690 82 v-28 m0 14 q16 -16 26 4"/>
+    <path d="M740 82 v-28 m0 14 q16 -16 26 4" stroke="{ACCENT2}"/>
+    <path d="M790 82 v-28 m0 14 q16 -16 26 4"/>
   </g>
   <text x="30" y="140" font-family="ui-monospace, Menlo, monospace" font-size="22" fill="{ACCENT}">8.5 MB · tarayıcıda · Türkçe TTS</text>
 </svg>
