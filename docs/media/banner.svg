@@ -1,13 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 400" width="1500" height="400" role="img" aria-label="zerre-tts banner">
   <rect width="1500" height="400" fill="#fbfbfa"/>
-  <g fill="none" stroke="#0b6b5b" stroke-width="9" stroke-linecap="round" opacity="0.85">
-    <path d="M70 260 q45 -130 90 0 q45 -130 90 0"/>
-    <path d="M310 260 v-110 m0 55 q34 -34 56 8 l18 47"/>
-    <path d="M470 260 v-110 l44 62 l44 -62 v110" stroke="#5ad2b8"/>
-    <path d="M650 150 a56 56 0 1 1 0.1 0" stroke="#5ad2b8"/>
-    <path d="M790 260 v-110 m0 33 q40 -22 66 9 l18 68"/>
-    <path d="M950 260 l55 -84 l-55 0 l55 84" stroke="#5ad2b8"/>
+  <text x="80" y="180" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="72" font-weight="700" fill="#12141a">zerre-tts</text>
+  <text x="80" y="240" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="34" fill="#0b6b5b">8.5 MB · tarayıcıda · Türkçe TTS</text>
+  <g fill="none" stroke="#0b6b5b" stroke-width="10" stroke-linecap="round" opacity="0.85">
+    <path d="M700 260 q55 -160 110 0 q55 -160 110 0"/>
+    <path d="M990 260 v-140 m0 70 q48 -48 74 12 l24 58"/>
+    <path d="M1170 150 a70 70 0 1 0 0.1 0" stroke="#5ad2b8"/>
   </g>
-  <text x="1120" y="200" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="56" font-weight="700" fill="#12141a" text-anchor="middle">zerre-tts</text>
-  <text x="1120" y="250" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="28" fill="#0b6b5b" text-anchor="middle">8.5 MB · tarayıcıda · Türkçe</text>
 </svg>

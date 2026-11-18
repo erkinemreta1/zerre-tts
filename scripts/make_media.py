@@ -1,9 +1,8 @@
-"""Render the zerre-tts logo and og-image as SVG (text-first, no binary deps).
+"""Render the zerre-tts media assets as SVG.
 
     uv run python scripts/make_media.py
 """
 
-import argparse
 import sys
 from pathlib import Path
 
@@ -15,59 +14,53 @@ PAPER = "#fbfbfa"
 ACCENT = "#0b6b5b"
 ACCENT2 = "#5ad2b8"
 
-LOGO = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 220" width="960" height="220" role="img" aria-label="zerre-tts">
-  <rect width="960" height="220" fill="{PAPER}"/>
-  <g fill="none" stroke="{ACCENT}" stroke-width="14" stroke-linecap="round">
-    <path d="M60 150 q30 -90 60 0 q30 -90 60 0"/>
-    <path d="M220 150 l40 -60 l-40 0 l40 60" stroke="{ACCENT2}"/>
-    <path d="M320 90 a32 32 0 1 1 0.1 0" stroke="{ACCENT2}"/>
-    <path d="M400 90 v60 m0 -30 h44 m0 -30 v60"/>
-    <path d="M490 90 v60 h40"/>
-    <path d="M570 150 v-60 q30 -12 44 0 v60"/>
-    <path d="M660 90 v60 m0 -30 q20 -20 34 4 l10 26"/>
-    <path d="M740 90 v60 m0 -46 a26 26 0 1 1 20 44 l-20 2"/>
-    <path d="M830 90 v60 l30 -28 l30 28 v-60" stroke="{ACCENT2}"/>
+# One idea per asset: the wordmark IS the waveform (the hyphen becomes a pause,
+# "tts" is spoken by the second wave). No letters-as-signs.
+LOGO = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" width="720" height="160" role="img" aria-label="zerre-tts">
+  <rect width="720" height="160" fill="{PAPER}"/>
+  <text x="30" y="95" font-family="ui-monospace, 'Cascadia Code', Menlo, monospace" font-size="64" font-weight="700" fill="{INK}">zerre</text>
+  <g fill="none" stroke="{ACCENT}" stroke-width="12" stroke-linecap="round">
+    <path d="M330 70 l40 0" stroke="{PAPER}"/>
+    <path d="M380 45 a30 30 0 1 0 0.1 0"/>
+    <path d="M470 55 v50 m0 -25 q18 -18 30 6 l10 19"/>
+    <path d="M550 55 v50 m0 -25 q18 -18 30 6 l10 19"/>
+    <path d="M630 55 v50 m0 -25 q18 -18 30 6 l10 19"/>
   </g>
-  <text x="60" y="40" font-family="ui-monospace, 'Cascadia Code', Menlo, monospace" font-size="28" fill="{INK}">zerre-tts — 8.5 MB Türkçe TTS</text>
+  <text x="30" y="140" font-family="ui-monospace, Menlo, monospace" font-size="22" fill="{ACCENT}">8.5 MB · tarayıcıda · Türkçe TTS</text>
 </svg>
 """
 
 OG = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="zerre-tts">
   <rect width="1200" height="630" fill="{PAPER}"/>
-  <rect x="0" y="560" width="1200" height="70" fill="{ACCENT}" opacity="0.12"/>
-  <text x="80" y="150" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="84" font-weight="700" fill="{INK}">zerre-tts</text>
-  <text x="80" y="230" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="40" fill="{ACCENT}">8.5 MB Turkish TTS, trained from scratch</text>
-  <g fill="none" stroke="{ACCENT}" stroke-width="10" stroke-linecap="round" opacity="0.9">
-    <path d="M80 380 q40 -120 80 0 q40 -120 80 0"/>
-    <path d="M300 380 v-100 m0 50 q30 -30 50 6 l14 44"/>
-    <path d="M460 380 v-100 l40 56 l40 -56 v100" stroke="{ACCENT2}"/>
-    <path d="M640 280 a52 52 0 1 1 0.1 0" stroke="{ACCENT2}"/>
-    <path d="M770 380 v-100 m0 30 q36 -20 60 8 l16 62"/>
-    <path d="M920 380 l50 -76 l-50 0 l50 76" stroke="{ACCENT2}"/>
+  <rect x="0" y="520" width="1200" height="110" fill="{ACCENT}" opacity="0.10"/>
+  <text x="90" y="200" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="96" font-weight="700" fill="{INK}">zerre-tts</text>
+  <text x="90" y="280" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="44" fill="{ACCENT}">8.5 MB Turkish TTS, trained from scratch</text>
+  <g fill="none" stroke="{ACCENT}" stroke-width="11" stroke-linecap="round">
+    <path d="M90 430 q45 -140 90 0 q45 -140 90 0"/>
+    <path d="M330 430 v-120 m0 60 q40 -40 62 10 l20 50"/>
+    <path d="M480 430 v-120 m0 60 q40 -40 62 10 l20 50"/>
+    <path d="M630 430 v-120 m0 60 q40 -40 62 10 l20 50" stroke="{ACCENT2}"/>
+    <path d="M780 310 a60 60 0 1 0 0.1 0" stroke="{ACCENT2}"/>
+    <path d="M930 430 q45 -140 90 0 q45 -140 90 0" stroke="{ACCENT2}"/>
   </g>
-  <text x="80" y="600" font-family="ui-monospace, Menlo, monospace" font-size="26" fill="{INK}">runs in a browser tab · no server · Apache-2.0 · werre 1.3% held-out</text>
+  <text x="90" y="590" font-family="ui-monospace, Menlo, monospace" font-size="26" fill="{INK}">runs in a browser tab · no server · Apache-2.0 · WER 1.3% held-out</text>
 </svg>
 """
 
 BANNER = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 400" width="1500" height="400" role="img" aria-label="zerre-tts banner">
   <rect width="1500" height="400" fill="{PAPER}"/>
-  <g fill="none" stroke="{ACCENT}" stroke-width="9" stroke-linecap="round" opacity="0.85">
-    <path d="M70 260 q45 -130 90 0 q45 -130 90 0"/>
-    <path d="M310 260 v-110 m0 55 q34 -34 56 8 l18 47"/>
-    <path d="M470 260 v-110 l44 62 l44 -62 v110" stroke="{ACCENT2}"/>
-    <path d="M650 150 a56 56 0 1 1 0.1 0" stroke="{ACCENT2}"/>
-    <path d="M790 260 v-110 m0 33 q40 -22 66 9 l18 68"/>
-    <path d="M950 260 l55 -84 l-55 0 l55 84" stroke="{ACCENT2}"/>
+  <text x="80" y="180" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="72" font-weight="700" fill="{INK}">zerre-tts</text>
+  <text x="80" y="240" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="34" fill="{ACCENT}">8.5 MB · tarayıcıda · Türkçe TTS</text>
+  <g fill="none" stroke="{ACCENT}" stroke-width="10" stroke-linecap="round" opacity="0.85">
+    <path d="M700 260 q55 -160 110 0 q55 -160 110 0"/>
+    <path d="M990 260 v-140 m0 70 q48 -48 74 12 l24 58"/>
+    <path d="M1170 150 a70 70 0 1 0 0.1 0" stroke="{ACCENT2}"/>
   </g>
-  <text x="1120" y="200" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="56" font-weight="700" fill="{INK}" text-anchor="middle">zerre-tts</text>
-  <text x="1120" y="250" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="28" fill="{ACCENT}" text-anchor="middle">8.5 MB · tarayıcıda · Türkçe</text>
 </svg>
 """
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
     OUT.mkdir(parents=True, exist_ok=True)
     for name, svg in (("logo.svg", LOGO), ("og-image.svg", OG), ("banner.svg", BANNER)):
         (OUT / name).write_text(svg, encoding="utf-8")
