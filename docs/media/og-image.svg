@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="zerre-tts">
+  <rect width="1200" height="630" fill="#fbfbfa"/>
+  <rect x="0" y="560" width="1200" height="70" fill="#0b6b5b" opacity="0.12"/>
+  <text x="80" y="150" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="84" font-weight="700" fill="#12141a">zerre-tts</text>
+  <text x="80" y="230" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="40" fill="#0b6b5b">8.5 MB Turkish TTS, trained from scratch</text>
+  <g fill="none" stroke="#0b6b5b" stroke-width="10" stroke-linecap="round" opacity="0.9">
+    <path d="M80 380 q40 -120 80 0 q40 -120 80 0"/>
+    <path d="M300 380 v-100 m0 50 q30 -30 50 6 l14 44"/>
+    <path d="M460 380 v-100 l40 56 l40 -56 v100" stroke="#5ad2b8"/>
+    <path d="M640 280 a52 52 0 1 1 0.1 0" stroke="#5ad2b8"/>
+    <path d="M770 380 v-100 m0 30 q36 -20 60 8 l16 62"/>
+    <path d="M920 380 l50 -76 l-50 0 l50 76" stroke="#5ad2b8"/>
+  </g>
+  <text x="80" y="600" font-family="ui-monospace, Menlo, monospace" font-size="26" fill="#12141a">runs in a browser tab · no server · Apache-2.0 · werre 1.3% held-out</text>
+</svg>

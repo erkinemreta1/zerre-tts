@@ -13,74 +13,78 @@ library_name: pytorch
 pipeline_tag: text-to-speech
 ---
 
-# zerre-tts (tr-v1) — 8 MB, tarayıcıda çalışan Türkçe TTS
+# zerre-tts (tr-v1) — an 8.5 MB Turkish TTS that runs in a browser tab
 
-İki sesli, sıfırdan eğitilmiş Türkçe metin-konuşma modeli. **int8 ONNX hâli 8.5 MB**
-ve tarayıcıda WebAssembly ile çalışır — sunucu, API, GPU gerekmez.
+A two-voice Turkish text-to-speech model, trained from scratch. The **int8 ONNX
+build is 8.5 MB** and runs in the browser via WebAssembly — no server, no API,
+no GPU.
 
-- 🤗 Demo: https://erkinemreta1.github.io/zerre-tts/
-- 🧑‍💻 Kod ve eğitim tarifi: https://github.com/erkinemreta1/zerre-tts
-- Mimarî [tiny-voca](https://github.com/n4ze3m/tiny-voca) uyarlaması (Apache-2.0).
+- 🎧 Demo: https://erkinemreta1.github.io/zerre-tts/
+- 🧑‍💻 Code and training recipe: https://github.com/erkinemreta1/zerre-tts
+- Architecture adapted from [tiny-voca](https://github.com/n4ze3m/tiny-voca) (Apache-2.0).
 
-## Neden bu
+Türkçe: iki sesli, sıfırdan eğitilmiş Türkçe metin-konuşma modeli. Tarayıcıda
+çalışır, sunucu gerekmez; ölçümler ve kıyaslar aşağıdadır.
+
+## Why this one
 
 | | |
 |---|---|
-| Boyut | **8.5 MB int8** (fp32: 21.4 MB) |
-| Parametre | 4.5M |
-| Ses | 24 kHz, 2 ses (SES-A, SES-B) |
-| Lisans | Apache-2.0 — ticari kullanım serbest |
-| Çalıştığı yer | Tarayıcı (WASM), CPU, ONNX Runtime, PyTorch |
-| Türkçe WER | **1.3%** (held-out 20 klip) · **12.7%** (8 yeni cümle) |
+| Size | **8.5 MB int8** (fp32: 21.4 MB) |
+| Parameters | 4.5M |
+| Voices | 24 kHz, two voices (SES-A, SES-B) |
+| Licence | Apache-2.0 — commercial use allowed |
+| Runs on | Browser (WASM), CPU, ONNX Runtime, PyTorch |
+| Turkish WER | **1.3%** (20 held-out clips) · **12.7%** (8 new sentences) |
 
-Quantization ölçümü (8 held-out klipte, Whisper large-v3):
+Quantisation, measured on 8 held-out clips with Whisper large-v3:
 
-| Varyant | WER | Dosya |
+| Variant | WER | File |
 |---|---:|---:|
 | fp32 | 14.0% | 21.38 MB |
 | **int8** | **15.3%** | **8.55 MB** |
 
-Yani 13 MB'ı **anlaşılırlıktan hiçbir şey kaybetmeden** attık. Aynı sette
-filtre zinciri (90 Hz high-pass + 3 kHz presence + spektral temizlik) alt bant
-enerjisini %7.3'ten %4.2'ye indiriyor.
+13 MB smaller for no measurable cost in intelligibility. On the same clips, the
+post-processing chain (90 Hz high-pass, +2.5 dB presence at 3 kHz, spectral
+subtraction) halves the below-120 Hz energy that read as boom.
 
-## Dosyalar
+## Where it stands
 
-| Dosya | Boyut | Ne için |
-|---|---:|---|
-| **`onnx/model-int8.onnx`** | **8.5 MB** | **Önerilen.** Tarayıcı, gömülü, dağıtım |
-| `onnx/model.onnx` | 21.4 MB | fp32, referans/karşılaştırma |
-| `onnx/model.json` | — | girdi-çıktı tanımı, ses listesi, sembol tablosu |
-| `inference.pt` | 18.2 MB | PyTorch checkpoint (yeniden eğitim/ince ayar) |
-| `samples/` | — | ham ve filtrelenmiş örnekler |
-| `metrics/` | — | eğitim günlüğü, GPU doluluk raporu |
+Among browser-capable Turkish TTS models, this one leads on size per unit of
+quality (eval sets differ; read the ratio, not the absolutes):
 
-## Nerede duruyoruz
-
-Türkçe, tarayıcıda çalışan modeller arasında **MB başına kalitede öndeyiz**.
-Sayılar yayınlanmış kaynaklardan; ölçüm setleri aynı değil, o yüzden mutlak değil
-oransal okuyun.
-
-| Model | Parametre | Dağıtım boyutu | Türkçe WER | MB/WER | Lisans | Tarayıcı | Ses |
+| Model | Params | Deploy size | Turkish WER | MB/WER | Licence | Browser | Voices |
 |---|---:|---:|---:|---:|---|---|---|
-| **zerre-tts (int8)** | **4.5M** | **8.5 MB** | **1.3%** (20 klip) | **6.5** | **Apache-2.0** | ✅ | **2** |
-| okur-tts | 9.8M | ~23 MB ONNX | 1.81% (495 cümle) | 12.8 | Apache-2.0 | ✅ | 1 |
+| **zerre-tts (int8)** | **4.5M** | **8.5 MB** | **1.3%** | **6.5** | **Apache-2.0** | ✅ | **2** |
+| okur-tts | 9.8M | ~23 MB | 1.81% | 12.8 | Apache-2.0 | ✅ | 1 |
 | Piper `tr_TR-dfki` | ~16M | 63 MB | 3.14% | 20.1 | CC BY-NC-SA | ✅ | 1 |
-| Meta MMS-TTS `tur` | 36M | ~145 MB | 5.74% | 25.3 | CC BY-NC | ✅ | 1 |
-| sanoTTS | 0.5-2.3M | ~2.8 MB | 30.3% | 0.09 | GPL-3.0 | ✅ | çok |
-| Kokoro-82M | 82M | ~330 MB | Türkçe yok | — | Apache-2.0 | ✅ | çok |
-| XTTS-v2 | 467M | ~2 GB | — | — | CPML (NC) | ❌ | klonlama |
+| Meta MMS-TTS | 36M | ~145 MB | 5.74% | 25.3 | CC BY-NC | ✅ | 1 |
+| sanoTTS | 0.5-2.3M | ~2.8 MB | 30.3% | 0.09 | GPL-3.0 | ✅ | many |
+| Kokoro-82M | 82M | ~330 MB | no Turkish | — | Apache-2.0 | ✅ | many |
+| XTTS-v2 | 467M | ~2 GB | — | — | CPML (NC) | ❌ | cloning |
 
-Kazandığımız eksenler: **en küçük dağıtım boyutu**, **en iyi MB/WER oranı**,
-**ticari kullanıma açık lisans** (Piper dfki ve MMS NC, sanoTTS GPL), **iki ses**.
+Smallest deploy, best MB/WER, commercial-friendly licence, two voices. It is
+not the most natural: 1-2 GB server-class models still sound better.
 
-## Kullanım
+## Files
+
+| File | Size | Use |
+|---|---:|---|
+| **`onnx/model-int8.onnx`** | **8.5 MB** | **Recommended.** Browser, embedded, distribution |
+| `onnx/model.onnx` | 21.4 MB | fp32, reference/comparison |
+| `onnx/model.json` | — | input/output spec, voice list, symbol table |
+| `inference.pt` | 18.2 MB | PyTorch checkpoint (retraining/fine-tuning) |
+| `samples/` | — | raw and post-processed examples |
+| `metrics/` | — | training journal, GPU utilisation report |
+
+## Usage
 
 ### ONNX (int8)
 
-Girdiler: `tokens` (int64 [1,N]), `stress` (int64 [1,N]), `voice` (int64 [1]),
-`speed`, `pitch_shift`, `pitch_range` (float32 [1]). Çıktı: `audio` (float32).
-Metin→fonem modelin dışında: eSpeak NG `tr` veya demoda kullanılan sözlük+kural.
+Inputs: `tokens` (int64 [1,N]), `stress` (int64 [1,N]), `voice` (int64 [1]),
+`speed`, `pitch_shift`, `pitch_range` (float32 [1]). Output: `audio` (float32).
+Text→phoneme is outside the graph: eSpeak NG `tr`, or the lexicon-plus-rules
+phonemizer used by the demo.
 
 ### PyTorch
 
@@ -89,28 +93,32 @@ python -m zerre.infer --checkpoint inference.pt --lang tr \
   --text "Merhaba dünya." --voice SES-A --output hello.wav
 ```
 
-## Eğitim
+One sentence per call; split longer text at sentence boundaries.
 
-İki açık lisanslı Türkçe sesli kitap korpusu (kimlikler ve lisans notu:
-`docs/data_sources.md`): 16 saat, 48→24 kHz indirildi, eSpeak fonem
-tanıyıcıyla hizalandı, 6.347 klip (11.93 saat) kabul edildi. 65.000 step,
-tek L4'te ~6.5 saat, ~7 $.
+## Training
 
-## Kişilik ve veri notu
+Openly licensed Turkish audiobook corpora (identities and the licence caveat:
+`docs/data_sources.md` in the repository): 16 h, downsampled 48→24 kHz, aligned
+with an eSpeak phoneme recogniser; 6,347 clips (11.93 h) accepted. 65,000 steps,
+~6.5 h on a single L4, ~$7.
 
-Sesler açık lisanslı kayıtlardan eğitildi; **klonlama yapılmadı**, konuşmacı
-kimliği iddia edilmiyor ve konuşmacılarla bir bağ bulunmuyor. Ayrıntı ve lisans
-çekinceleri: \docs/data_sources.md\. Ticari kullanımda hukuki değerlendirme
-kullanıcıya aittir.
+## Voice and data note
 
-## Sınırlar
+The voices were trained from openly licensed recordings; **no cloning was done**,
+no speaker identity is claimed and there is no connection to the speakers. The
+voices are published under neutral labels (SES-A, SES-B). Details and caveats:
+`docs/data_sources.md`. Legal review for commercial use is the user's
+responsibility.
 
-- İki sabit ses (SES-A, SES-B); klonlama ve streaming yok.
-- Okuma tonu ağırlıklı; soru/ünlem prosodisi sınırlı.
-- Yabancı isimler ve kısaltmalar sık yanlış okunur.
-- WER ölçümleri küçük setlerde (20 klip / 8 cümle); mutlak değil, sanity check.
+## Limits
 
-## Atıf
+- Two fixed voices (SES-A, SES-B); no cloning, no streaming.
+- Read-speech prosody; questions and exclamations are weak.
+- Foreign names and abbreviations are often wrong.
+- WER was measured on small sets (20 clips / 8 sentences): a sanity check, not
+  a benchmark.
+
+## Citation
 
 ```bibtex
 @software{zerre_tts_2026,
@@ -120,4 +128,4 @@ kullanıcıya aittir.
 }
 ```
 
-Mimarî ve eğitim tarifi: Muhammed Nazeem, *tiny-voca* (Apache-2.0).
+Architecture and training recipe: Muhammed Nazeem, *tiny-voca* (Apache-2.0).

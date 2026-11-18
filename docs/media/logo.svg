@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 220" width="960" height="220" role="img" aria-label="zerre-tts">
+  <rect width="960" height="220" fill="#fbfbfa"/>
+  <g fill="none" stroke="#0b6b5b" stroke-width="14" stroke-linecap="round">
+    <path d="M60 150 q30 -90 60 0 q30 -90 60 0"/>
+    <path d="M220 150 l40 -60 l-40 0 l40 60" stroke="#5ad2b8"/>
+    <path d="M320 90 a32 32 0 1 1 0.1 0" stroke="#5ad2b8"/>
+    <path d="M400 90 v60 m0 -30 h44 m0 -30 v60"/>
+    <path d="M490 90 v60 h40"/>
+    <path d="M570 150 v-60 q30 -12 44 0 v60"/>
+    <path d="M660 90 v60 m0 -30 q20 -20 34 4 l10 26"/>
+    <path d="M740 90 v60 m0 -46 a26 26 0 1 1 20 44 l-20 2"/>
+    <path d="M830 90 v60 l30 -28 l30 28 v-60" stroke="#5ad2b8"/>
+  </g>
+  <text x="60" y="40" font-family="ui-monospace, 'Cascadia Code', Menlo, monospace" font-size="28" fill="#12141a">zerre-tts — 8.5 MB Türkçe TTS</text>
+</svg>
